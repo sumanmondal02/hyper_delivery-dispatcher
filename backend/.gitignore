@@ -45,3 +45,5 @@ req-auth.http
 req-post.http
 req-user.http
 req-notification.http
+.http
+testing

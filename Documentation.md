@@ -1,4 +1,4 @@
-# Hyper Local Delivery Dispatcher - Complete Project Documentation
+# Hyper Local Delivery Dispatcher - Documentation
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
@@ -24,13 +24,14 @@ Real-time delivery management system connecting customers, delivery partners, an
 - Distance-based pricing
 - Cash on Delivery (COD)
 - Socket.io for real-time updates
-- Mapbox for routing & distance calculation
+- Google Maps API for routing, distance calculation & live map display
 
 ---
 
 ## Tech Stack
 
 ### Backend
+
 | Technology | Purpose |
 |------------|---------|
 | **Node.js** | Runtime environment |
@@ -42,28 +43,29 @@ Real-time delivery management system connecting customers, delivery partners, an
 | **bcrypt** | Password hashing |
 | **Multer** | File upload handling |
 | **Cloudinary** | Image storage |
-| **Mapbox API** | Maps, routing, distance |
-| **express-validator** | Input validation |
+| **Google Maps API** | Distance Matrix, Directions, Geocoding |
 
 ### Frontend
+
 | Technology | Purpose |
 |------------|---------|
 | **React.js** | UI framework |
 | **TailwindCSS** | Styling |
 | **Axios** | HTTP requests |
 | **socket.io-client** | Real-time client |
-| **React Router v6** | Routing |
-| **Context API / Redux** | State management |
-| **react-map-gl** | Mapbox integration |
+| **React Router** | Routing |
+| **Zustand** | State management |
+| **@react-google-maps/api** | Google Maps React integration |
 
 ### Hosting & Services
-| Service | Purpose | Plan |
-|---------|---------|------|
-| **Render** | Backend hosting | Free tier |
-| **Vercel** | Frontend hosting | Free tier |
-| **MongoDB Atlas** | Database hosting | Free tier (512MB) |
-| **Cloudinary** | Image storage | Free tier (25GB) |
-| **Mapbox** | Maps & routing | Free tier (100k requests/month) |
+
+| Service | Purpose |
+|---------|---------|
+| **Render** | Backend hosting |
+| **Vercel** | Frontend hosting |
+| **MongoDB Atlas** | Database hosting |
+| **Cloudinary** | Image storage |
+| **Google Maps Platform** | Maps, Directions & Distance Matrix |
 
 ---
 
@@ -72,13 +74,14 @@ Real-time delivery management system connecting customers, delivery partners, an
 ### 1. Customer
 - Browse vendors and products
 - Place orders
-- Track deliveries in real-time
+- Cancel orders before dispatch / cancel via delivery partner during delivery
+- Track deliveries in real-time on a Google Map
 - View order history
-- Rate vendors and delivery partners
 
 ### 2. Delivery Partner
 - Accept/reject delivery requests
-- View optimized routes
+- Cancel order during delivery if the customer wishes to
+- View optimized route on Google Maps
 - Update delivery status
 - Track earnings
 - View delivery history
@@ -91,61 +94,61 @@ Real-time delivery management system connecting customers, delivery partners, an
 
 ### 4. Admin
 - Manage all users
-- Monitor active deliveries
+- Monitor active deliveries on a live map
 - View platform analytics
-- Configure pricing settings
+- Configure pricing settings for delivery partners
 
 ---
 
 ## Core Features
 
 ### Customer Features
-✅ Browse nearby vendors by location  
-✅ Search and filter products  
-✅ Add items to cart  
-✅ Place order with delivery address  
-✅ **Receive unique Order ID** (e.g., ORD-20260517-A3X9K)  
-✅ Track order status in real-time  
-✅ View delivery partner's live location on map  
-✅ Order history with all past orders  
-✅ Rate vendor and delivery partner (1-5 stars)  
-✅ Manage multiple delivery addresses  
-✅ Cash on Delivery (COD) payment  
-✅ Real-time notifications  
+- Browse nearby vendors by location
+- Search and filter products
+- Add items to cart
+- Place order with delivery address
+- **Receive unique Order ID** (e.g., `ORD-20260517-A3X9K`)
+- Cancel order
+- Track order status in real-time
+- View delivery partner's live location on Google Map
+- Order history with all past orders
+- Cash on Delivery (COD) payment
+- Real-time notifications about order status
 
 ### Delivery Partner Features
-✅ View available delivery requests with distance & earnings  
-✅ Accept or reject orders  
-✅ View optimized route from pickup to delivery  
-✅ Update delivery status (picked up → in transit → delivered)  
-✅ Real-time location sharing  
-✅ Earnings dashboard  
-✅ Delivery history  
-✅ Toggle availability (online/offline)  
+- View available delivery requests with distance & earnings
+- Accept or reject orders
+- View optimized route from pickup to delivery (Google Maps Directions)
+- Update delivery status (`picked_up → in_transit → delivered`)
+- Cancel order if customer wishes to
+- Real-time location sharing
+- Earnings dashboard
+- Delivery history
+- Toggle availability (online/offline)
 
 ### Vendor Features
-✅ Manage menu (add/edit/delete products)  
-✅ Upload product images  
-✅ Receive orders in real-time  
-✅ Update order status (received → preparing → ready)  
-✅ View active orders queue  
-✅ Basic sales analytics  
-✅ Set opening/closing hours  
+- Manage menu (add/edit/delete products)
+- Upload product images
+- Receive orders in real-time
+- Update order status (`received → preparing → ready`)
+- View active orders queue
+- Basic sales analytics
+- Set opening/closing hours
 
 ### Admin Features
-✅ Dashboard with key metrics (total orders, revenue, active users)  
-✅ User management (view, activate, deactivate all users)  
-✅ Monitor all active deliveries on map  
-✅ View all orders with filters  
-✅ Platform analytics (daily/weekly/monthly)  
-✅ Configure pricing (base fare, per km rate)  
-✅ Manage vendor approvals  
+- Dashboard with key metrics (total orders, revenue, active users)
+- Monitor all active deliveries on Google Map
+- View all orders with filters
+- Platform analytics (daily/weekly/monthly)
+- Configure pricing (base fare, per km rate)
+- Manage vendor approvals to sell on the platform
 
 ---
 
 ## Database Schema
 
 ### Collection: `users`
+
 ```javascript
 {
   _id: ObjectId,                          // Auto-generated
@@ -153,68 +156,68 @@ Real-time delivery management system connecting customers, delivery partners, an
   email: String,                          // Required, unique, lowercase
   password: String,                       // Required, hashed with bcrypt
   phone: String,                          // Required, unique
-  role: String,                           // Enum: ['customer', 'partner', 'vendor', 'admin']
+  role: String,                           // Enum: ['customer', 'partner', 'vendor'] — admin created manually only
   profileImage: String,                   // Cloudinary URL
   isActive: Boolean,                      // Default: true
   createdAt: Date,                        // Auto-generated
   updatedAt: Date,                        // Auto-generated
-  
+
   // Only for role = 'partner'
   partnerDetails: {
-    vehicleType: String,                  // Enum: ['bike', 'scooter', 'bicycle']
+    vehicleType: String,                  // Enum: ['bike', 'scooter', 'truck']
     vehicleNumber: String,
     drivingLicense: String,
-    isAvailable: Boolean,                 // Default: false (online/offline status)
+    isAvailable: Boolean,                 // Default: false (online/offline toggle)
     currentLocation: {
       type: String,                       // Always 'Point'
-      coordinates: [Number]               // [longitude, latitude]
+      coordinates: [Number]              // [longitude, latitude]
     },
-    totalEarnings: Number,                // Default: 0
-    completedDeliveries: Number,          // Default: 0
-    rating: Number                        // Default: 0
+    totalEarnings: Number,               // Default: 0
+    completedDeliveries: Number          // Default: 0
   }
 }
 
 // Indexes
 users.email: unique
 users.phone: unique
-users.partnerDetails.currentLocation: 2dsphere (for geospatial queries)
+users.partnerDetails.currentLocation: 2dsphere  // Required for geospatial queries
 ```
 
 ### Collection: `vendors`
+
 ```javascript
 {
-  _id: ObjectId,                          // Auto-generated
+  _id: ObjectId,
   userId: ObjectId,                       // Reference to users collection
   businessName: String,                   // Required
   description: String,
   category: String,                       // Enum: ['restaurant', 'grocery', 'pharmacy', 'bakery', 'other']
-  images: [String],                       // Array of Cloudinary URLs
+  image: String,                          // Store image / logo — Cloudinary URL
   location: {
     type: String,                         // Always 'Point'
-    coordinates: [Number],                // [longitude, latitude]
-    address: String,                      // Full address
+    coordinates: [Number],               // [longitude, latitude]
+    address: String,
     city: String,
     pincode: String
   },
   openingTime: String,                    // Format: "09:00"
   closingTime: String,                    // Format: "22:00"
   isOpen: Boolean,                        // Default: true
-  rating: Number,                         // Default: 0
   totalOrders: Number,                    // Default: 0
-  createdAt: Date,                        // Auto-generated
-  updatedAt: Date                         // Auto-generated
+  createdAt: Date,
+  updatedAt: Date
 }
 
 // Indexes
 vendors.userId: unique
-vendors.location: 2dsphere (for geospatial queries)
+vendors.location: 2dsphere
 ```
 
 ### Collection: `products`
+
 ```javascript
 {
-  _id: ObjectId,                          // Auto-generated
+  _id: ObjectId,
   vendorId: ObjectId,                     // Reference to vendors collection
   name: String,                           // Required
   description: String,
@@ -223,30 +226,29 @@ vendors.location: 2dsphere (for geospatial queries)
   image: String,                          // Cloudinary URL
   isAvailable: Boolean,                   // Default: true
   preparationTime: Number,                // In minutes
-  createdAt: Date,                        // Auto-generated
-  updatedAt: Date                         // Auto-generated
+  createdAt: Date,
+  updatedAt: Date
 }
 
 // Indexes
-products.vendorId: indexed for faster queries
+products.vendorId: indexed
 ```
 
 ### Collection: `addresses`
+
 ```javascript
 {
-  _id: ObjectId,                          // Auto-generated
+  _id: ObjectId,
   userId: ObjectId,                       // Reference to users collection
-  label: String,                          // 'Home', 'Work', 'Other'
   fullAddress: String,                    // Required
   landmark: String,
   location: {
     type: String,                         // Always 'Point'
-    coordinates: [Number]                 // [longitude, latitude]
+    coordinates: [Number]               // [longitude, latitude]
   },
   city: String,
   pincode: String,
-  isDefault: Boolean,                     // Default: false
-  createdAt: Date                         // Auto-generated
+  createdAt: Date
 }
 
 // Indexes
@@ -254,60 +256,61 @@ addresses.userId: indexed
 ```
 
 ### Collection: `orders`
+
 ```javascript
 {
-  _id: ObjectId,                          // Auto-generated
-  orderId: String,                        // Unique, e.g., "ORD-20260517-A3X9K"
+  _id: ObjectId,
+  orderId: String,                        // Unique — e.g., "ORD-20260517-A3X9K"
   customerId: ObjectId,                   // Reference to users collection
   vendorId: ObjectId,                     // Reference to vendors collection
-  
-  // EMBEDDED: Order items (not separate collection)
+
+  // EMBEDDED: Order items snapshot
   items: [
     {
-      productId: ObjectId,                // Reference to products collection
-      name: String,                       // Product name snapshot
+      productId: ObjectId,
+      name: String,                       // Product name at time of order
       price: Number,                      // Price at time of order
       quantity: Number,
       subtotal: Number                    // price * quantity
     }
   ],
-  
+
   // EMBEDDED: Delivery address snapshot
   deliveryAddress: {
     fullAddress: String,
     landmark: String,
     location: {
       type: String,                       // Always 'Point'
-      coordinates: [Number]               // [longitude, latitude]
+      coordinates: [Number]
     }
   },
-  
+
   // EMBEDDED: Pickup address snapshot
   pickupAddress: {
     businessName: String,
     address: String,
     location: {
       type: String,                       // Always 'Point'
-      coordinates: [Number]               // [longitude, latitude]
+      coordinates: [Number]
     }
   },
-  
+
   itemsTotal: Number,                     // Sum of all item subtotals
   deliveryFee: Number,                    // Calculated based on distance
   totalAmount: Number,                    // itemsTotal + deliveryFee
-  
+
   paymentMethod: String,                  // Default: 'COD'
-  paymentStatus: String,                  // Enum: ['pending', 'paid'], Default: 'pending'
-  
+  paymentStatus: String,                  // Enum: ['pending', 'paid'] — Default: 'pending'
+
   orderStatus: String,                    // Enum: ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled']
-  
-  distance: Number,                       // In kilometers
+
+  distance: Number,                       // In kilometers (from Google Distance Matrix)
   estimatedDeliveryTime: Number,          // In minutes
-  
-  specialInstructions: String,            // Optional customer notes
-  
-  createdAt: Date,                        // Auto-generated
-  updatedAt: Date,                        // Auto-generated
+
+  specialInstructions: String,
+
+  createdAt: Date,
+  updatedAt: Date,
   deliveredAt: Date                       // Set when status = 'delivered'
 }
 
@@ -319,32 +322,33 @@ orders.orderStatus: indexed
 ```
 
 ### Collection: `deliveries`
+
 ```javascript
 {
-  _id: ObjectId,                          // Auto-generated
+  _id: ObjectId,
   orderId: ObjectId,                      // Reference to orders collection
   partnerId: ObjectId,                    // Reference to users collection (partner)
-  
+
   status: String,                         // Enum: ['assigned', 'picked_up', 'in_transit', 'delivered', 'failed']
-  
-  partnerEarnings: Number,                // Amount partner will receive
-  
-  pickedUpAt: Date,                       // When partner picked up from vendor
-  deliveredAt: Date,                      // When delivered to customer
-  
+
+  partnerEarnings: Number,
+
+  pickedUpAt: Date,
+  deliveredAt: Date,
+
   // EMBEDDED: Real-time location tracking history
   trackingHistory: [
     {
       location: {
         type: String,                     // Always 'Point'
-        coordinates: [Number]             // [longitude, latitude]
+        coordinates: [Number]
       },
       timestamp: Date
     }
   ],
-  
-  createdAt: Date,                        // Auto-generated
-  updatedAt: Date                         // Auto-generated
+
+  createdAt: Date,
+  updatedAt: Date
 }
 
 // Indexes
@@ -353,43 +357,18 @@ deliveries.partnerId: indexed
 deliveries.status: indexed
 ```
 
-### Collection: `ratings`
-```javascript
-{
-  _id: ObjectId,                          // Auto-generated
-  orderId: ObjectId,                      // Reference to orders collection
-  customerId: ObjectId,                   // Reference to users collection
-  
-  // Vendor rating
-  vendorId: ObjectId,                     // Reference to vendors collection
-  vendorRating: Number,                   // 1-5 stars
-  vendorReview: String,                   // Optional text review
-  
-  // Partner rating
-  partnerId: ObjectId,                    // Reference to users collection
-  partnerRating: Number,                  // 1-5 stars
-  partnerReview: String,                  // Optional text review
-  
-  createdAt: Date                         // Auto-generated
-}
-
-// Indexes
-ratings.orderId: unique
-ratings.vendorId: indexed
-ratings.partnerId: indexed
-```
-
 ### Collection: `notifications`
+
 ```javascript
 {
-  _id: ObjectId,                          // Auto-generated
-  userId: ObjectId,                       // Reference to users collection
-  title: String,                          // Notification title
-  message: String,                        // Notification body
+  _id: ObjectId,
+  userId: ObjectId,
+  title: String,
+  message: String,
   type: String,                           // Enum: ['order', 'delivery', 'payment', 'system']
   isRead: Boolean,                        // Default: false
-  metadata: Object,                       // Extra data (e.g., { orderId: '...' })
-  createdAt: Date                         // Auto-generated
+  metadata: Object,                       // e.g., { orderId: 'ORD-20260517-A3X9K' }
+  createdAt: Date
 }
 
 // Indexes
@@ -401,54 +380,40 @@ notifications.isRead: indexed
 
 ## API Endpoints
 
-### Authentication Routes (`/api/auth`)
+### Authentication Routes — `/api/auth`
 
 #### Register User
 ```
 POST /api/auth/register
-Body: { name, email, password, phone, role }
+Body:     { name, email, password, phone, role }
 Response: { success, token, user }
 ```
 
 #### Login User
 ```
 POST /api/auth/login
-Body: { email, password }
+Body:     { email, password }
 Response: { success, token, user }
-```
-
-#### Refresh Token
-```
-POST /api/auth/refresh-token
-Headers: { Authorization: Bearer <token> }
-Response: { success, token }
 ```
 
 #### Logout User
 ```
 POST /api/auth/logout
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, message }
-```
-
-#### Get Current User
-```
-GET /api/auth/me
-Headers: { Authorization: Bearer <token> }
-Response: { success, user }
 ```
 
 #### Update Profile
 ```
 PUT /api/auth/profile
-Headers: { Authorization: Bearer <token> }
-Body: { name, phone, profileImage }
+Headers:  Authorization: Bearer <token>
+Body:     { name, phone, email, profileImage }
 Response: { success, user }
 ```
 
 ---
 
-### Customer Routes (`/api`)
+### Customer Routes — `/api`
 
 #### Get Nearby Vendors
 ```
@@ -470,44 +435,39 @@ Response: { success, products: [...] }
 
 #### Add Address
 ```
-POST /api/addresses
-Headers: { Authorization: Bearer <token> }
-Body: { label, fullAddress, landmark, location, city, pincode, isDefault }
+POST /api/address
+Headers:  Authorization: Bearer <token>
+Body:     { fullAddress, landmark, location, city, pincode }
 Response: { success, address: {...} }
 ```
 
 #### Get User Addresses
 ```
-GET /api/addresses
-Headers: { Authorization: Bearer <token> }
+GET /api/address
+Headers:  Authorization: Bearer <token>
 Response: { success, addresses: [...] }
 ```
 
 #### Update Address
 ```
-PUT /api/addresses/:id
-Headers: { Authorization: Bearer <token> }
-Body: { label, fullAddress, landmark, isDefault }
+PUT /api/address/:id
+Headers:  Authorization: Bearer <token>
+Body:     { fullAddress, landmark }
 Response: { success, address: {...} }
 ```
 
 #### Delete Address
 ```
-DELETE /api/addresses/:id
-Headers: { Authorization: Bearer <token> }
+DELETE /api/address/:id
+Headers:  Authorization: Bearer <token>
 Response: { success, message }
 ```
 
 #### Create Order
 ```
 POST /api/orders
-Headers: { Authorization: Bearer <token> }
-Body: { 
-  vendorId, 
-  items: [{ productId, quantity }], 
-  deliveryAddressId,
-  specialInstructions 
-}
+Headers:  Authorization: Bearer <token>
+Body:     { vendorId, items: [{ productId, quantity }], deliveryAddressId, specialInstructions }
 Response: { success, order: { orderId, ... } }
 ```
 
@@ -519,213 +479,182 @@ Response: { success, order: {...}, delivery: {...} }
 
 #### Get Order History
 ```
-GET /api/orders/history
-Headers: { Authorization: Bearer <token> }
-Query: ?page=1&limit=10&status=delivered
+GET /api/orders/history?page=1&limit=10&status=delivered
+Headers:  Authorization: Bearer <token>
 Response: { success, orders: [...], totalPages, currentPage }
 ```
 
 #### Get Order Details
 ```
 GET /api/orders/:id
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, order: {...} }
-```
-
-#### Submit Rating
-```
-POST /api/ratings
-Headers: { Authorization: Bearer <token> }
-Body: { 
-  orderId, 
-  vendorRating, 
-  vendorReview, 
-  partnerRating, 
-  partnerReview 
-}
-Response: { success, rating: {...} }
 ```
 
 ---
 
-### Vendor Routes (`/api/vendor`)
+### Vendor Routes — `/api/vendor`
 
 #### Get Vendor Orders
 ```
 GET /api/vendor/orders?status=placed
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, orders: [...] }
 ```
 
 #### Update Order Status
 ```
 PUT /api/vendor/orders/:id
-Headers: { Authorization: Bearer <token> }
-Body: { status: 'preparing' | 'ready' }
+Headers:  Authorization: Bearer <token>
+Body:     { status: 'preparing' | 'ready' }
 Response: { success, order: {...} }
 ```
 
 #### Add Product
 ```
 POST /api/vendor/products
-Headers: { Authorization: Bearer <token> }
-Body: { name, description, price, category, image, preparationTime }
+Headers:  Authorization: Bearer <token>
+Body:     { name, description, price, category, image, preparationTime }
 Response: { success, product: {...} }
 ```
 
 #### Get Vendor Products
 ```
 GET /api/vendor/products
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, products: [...] }
 ```
 
 #### Update Product
 ```
 PUT /api/vendor/products/:id
-Headers: { Authorization: Bearer <token> }
-Body: { name, price, isAvailable, ... }
+Headers:  Authorization: Bearer <token>
+Body:     { name, price, isAvailable, ... }
 Response: { success, product: {...} }
 ```
 
 #### Delete Product
 ```
 DELETE /api/vendor/products/:id
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, message }
 ```
 
 #### Get Analytics
 ```
 GET /api/vendor/analytics
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, analytics: { totalOrders, revenue, popularItems } }
 ```
 
 #### Update Vendor Settings
 ```
 PUT /api/vendor/settings
-Headers: { Authorization: Bearer <token> }
-Body: { openingTime, closingTime, isOpen }
+Headers:  Authorization: Bearer <token>
+Body:     { openingTime, closingTime, isOpen }
 Response: { success, vendor: {...} }
 ```
 
 ---
 
-### Delivery Partner Routes (`/api/partner`)
+### Delivery Partner Routes — `/api/partner`
 
 #### Get Available Orders
 ```
 GET /api/partner/available-orders
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, orders: [{ orderId, distance, earnings, ... }] }
 ```
 
 #### Accept Order
 ```
 PUT /api/partner/orders/:id/accept
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, delivery: {...} }
 ```
 
 #### Update Delivery Status
 ```
 PUT /api/partner/orders/:id/status
-Headers: { Authorization: Bearer <token> }
-Body: { status: 'picked_up' | 'in_transit' | 'delivered' }
+Headers:  Authorization: Bearer <token>
+Body:     { status: 'picked_up' | 'in_transit' | 'delivered' }
 Response: { success, delivery: {...} }
 ```
 
 #### Update Live Location
 ```
 PUT /api/partner/location
-Headers: { Authorization: Bearer <token> }
-Body: { location: { coordinates: [lng, lat] } }
+Headers:  Authorization: Bearer <token>
+Body:     { location: { coordinates: [lng, lat] } }
 Response: { success, message }
 ```
 
 #### Get Earnings
 ```
 GET /api/partner/earnings
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, earnings: { total, today, thisWeek, thisMonth } }
 ```
 
 #### Get Delivery History
 ```
-GET /api/partner/history
-Headers: { Authorization: Bearer <token> }
-Query: ?page=1&limit=10
+GET /api/partner/history?page=1&limit=10
+Headers:  Authorization: Bearer <token>
 Response: { success, deliveries: [...] }
 ```
 
 #### Toggle Availability
 ```
 PUT /api/partner/availability
-Headers: { Authorization: Bearer <token> }
-Body: { isAvailable: true | false }
+Headers:  Authorization: Bearer <token>
+Body:     { isAvailable: true | false }
 Response: { success, message }
 ```
 
 ---
 
-### Admin Routes (`/api/admin`)
+### Admin Routes — `/api/admin`
 
 #### Get Dashboard Stats
 ```
 GET /api/admin/dashboard
-Headers: { Authorization: Bearer <token> }
-Response: { success, stats: { totalOrders, totalRevenue, activeDeliveries, totalUsers } }
+Headers:  Authorization: Bearer <token>
+Response: { success, stats: { totalOrders, totalRevenue, activeDeliveries, totalCustomers, totalPartners, totalVendors } }
 ```
 
 #### Get All Users
 ```
-GET /api/admin/users?role=partner&page=1&limit=20
-Headers: { Authorization: Bearer <token> }
+GET /api/admin/users?role=vendor&page=1&limit=20
+Headers:  Authorization: Bearer <token>
 Response: { success, users: [...], totalPages, currentPage }
-```
-
-#### Update User
-```
-PUT /api/admin/users/:id
-Headers: { Authorization: Bearer <token> }
-Body: { isActive: true | false }
-Response: { success, user: {...} }
-```
-
-#### Delete User
-```
-DELETE /api/admin/users/:id
-Headers: { Authorization: Bearer <token> }
-Response: { success, message }
 ```
 
 #### Get All Orders
 ```
 GET /api/admin/orders?status=delivered&date=2026-05-17
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, orders: [...] }
 ```
 
 #### Get All Deliveries
 ```
 GET /api/admin/deliveries
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, deliveries: [...] }
 ```
 
 #### Get Platform Analytics
 ```
 GET /api/admin/analytics
-Headers: { Authorization: Bearer <token> }
+Headers:  Authorization: Bearer <token>
 Response: { success, analytics: { daily, weekly, monthly } }
 ```
 
 #### Update Platform Settings
 ```
 PUT /api/admin/settings
-Headers: { Authorization: Bearer <token> }
-Body: { baseFare, perKmRate, commissionRate }
+Headers:  Authorization: Bearer <token>
+Body:     { baseFare, perKmRate, commissionRate }
 Response: { success, settings: {...} }
 ```
 
@@ -734,6 +663,7 @@ Response: { success, settings: {...} }
 ## Socket.io Events
 
 ### Server Setup
+
 ```javascript
 // server.js
 const io = require('socket.io')(server, {
@@ -743,14 +673,15 @@ const io = require('socket.io')(server, {
   }
 });
 
-// Middleware to authenticate socket connections
+// Authenticate socket connections via JWT
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
-  // Verify JWT token
-  // Attach user to socket
+  // Verify JWT and attach user to socket
   next();
 });
 ```
+
+---
 
 ### Customer Events
 
@@ -773,7 +704,7 @@ socket.on('order_status_update', (data) => {
   console.log(`Order ${data.orderId} is now ${data.status}`);
 });
 
-// Server emits (when vendor/partner updates status)
+// Server emits (when vendor or partner updates status)
 io.to(`order_${orderId}`).emit('order_status_update', {
   orderId,
   status: 'preparing',
@@ -781,18 +712,12 @@ io.to(`order_${orderId}`).emit('order_status_update', {
 });
 ```
 
-#### Listen for Partner Location Updates
+#### Listen for Partner Live Location
 ```javascript
-// Client listens
+// Client listens — update Google Maps marker position
 socket.on('partner_location_update', (data) => {
   // data: { orderId, location: { coordinates: [lng, lat] } }
-  // Update map marker position
-});
-
-// Server emits (when partner updates location)
-io.to(`order_${orderId}`).emit('partner_location_update', {
-  orderId,
-  location: { coordinates: [78.486, 17.385] }
+  marker.setPosition({ lat: data.location.coordinates[1], lng: data.location.coordinates[0] });
 });
 ```
 
@@ -837,7 +762,6 @@ io.to(`vendor_${vendorId}`).emit('new_order', order);
 // Client listens
 socket.on('order_cancelled', (data) => {
   // data: { orderId, reason }
-  // Remove from order queue
 });
 ```
 
@@ -877,22 +801,21 @@ io.to(`partner_${partnerId}`).emit('new_delivery_request', {
 // Client listens
 socket.on('order_ready', (data) => {
   // data: { orderId }
-  // Notify partner that order is ready for pickup
+  // Notify partner to proceed to pickup
 });
 ```
 
-#### Emit Location Updates
+#### Emit Live Location Updates
 ```javascript
-// Client emits (every 5-10 seconds while delivering)
+// Client emits every 5–10 seconds while on delivery
 socket.emit('update_location', {
   partnerId: '507f1f77bcf86cd799439012',
-  location: { coordinates: [78.486, 17.385] }
+  location: { coordinates: [78.486, 17.385] }  // [lng, lat]
 });
 
-// Server handles (broadcasts to customer tracking that order)
+// Server handles — broadcasts to the customer tracking this order
 socket.on('update_location', ({ partnerId, location }) => {
-  // Find active delivery by partnerId
-  // Emit to customer's order room
+  // Lookup active delivery by partnerId
   io.to(`order_${orderId}`).emit('partner_location_update', { location });
 });
 ```
@@ -914,13 +837,12 @@ socket.on('join_admin_room', () => {
 
 #### Listen for All Delivery Updates
 ```javascript
-// Client listens
+// Client listens — update admin dashboard Google Map
 socket.on('delivery_update', (data) => {
   // data: { orderId, status, partnerId, location }
-  // Update admin dashboard map
 });
 
-// Server emits (on any delivery status change)
+// Server emits on any delivery status change
 io.to('admin_room').emit('delivery_update', deliveryData);
 ```
 
@@ -932,68 +854,98 @@ io.to('admin_room').emit('delivery_update', deliveryData);
 
 ```javascript
 /**
- * Generate unique order ID
+ * Generate a unique Order ID.
  * Format: ORD-YYYYMMDD-XXXXX
  * Example: ORD-20260517-A3X9K
  */
 const generateOrderId = () => {
-  // Get current date in YYYYMMDD format
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  
-  // Generate 5 random alphanumeric characters
-  const random = Math.random().toString(36).substring(2, 7).toUpperCase();
-  
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+  const random = Math.random().toString(36).substring(2, 7).toUpperCase(); // 5 chars
   return `ORD-${date}-${random}`;
 };
-
-// Usage in order creation
-const orderId = generateOrderId(); // ORD-20260517-A3X9K
 ```
 
 ---
 
-### 2. Distance Calculation (Mapbox)
+### 2. Distance & Route Calculation (Google Maps Directions API)
+
+> Uses the **Google Maps Directions API** on the backend to get real driving distance,
+> estimated duration, and an encoded polyline for map display.
 
 ```javascript
 const axios = require('axios');
 
 /**
- * Calculate distance and duration between two points using Mapbox Directions API
- * @param {Object} pickup - { lng: Number, lat: Number }
- * @param {Object} dropoff - { lng: Number, lat: Number }
- * @returns {Object} - { distance: Number (km), duration: Number (minutes), route: Object }
+ * Calculate driving distance and estimated time between two coordinates
+ * using the Google Maps Directions API.
+ *
+ * @param {Object} pickup  - { lat: Number, lng: Number }
+ * @param {Object} dropoff - { lat: Number, lng: Number }
+ * @returns {Object} - { distance: Number (km), duration: Number (minutes), polyline: String }
  */
 const calculateDistance = async (pickup, dropoff) => {
-  try {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}`;
-    
-    const response = await axios.get(url, {
-      params: {
-        access_token: process.env.MAPBOX_TOKEN,
-        geometries: 'geojson',
-        steps: true,
-        overview: 'full'
-      }
-    });
-    
-    const route = response.data.routes[0];
-    
-    return {
-      distance: (route.distance / 1000).toFixed(2), // Convert meters to km
-      duration: Math.ceil(route.duration / 60),     // Convert seconds to minutes
-      route: route.geometry                         // GeoJSON route for map display
-    };
-  } catch (error) {
-    console.error('Mapbox API Error:', error);
-    throw new Error('Unable to calculate distance');
+  const url = 'https://maps.googleapis.com/maps/api/directions/json';
+
+  const response = await axios.get(url, {
+    params: {
+      origin: `${pickup.lat},${pickup.lng}`,
+      destination: `${dropoff.lat},${dropoff.lng}`,
+      mode: 'driving',
+      key: process.env.GOOGLE_MAPS_API_KEY
+    }
+  });
+
+  if (response.data.status !== 'OK') {
+    throw new Error(`Google Maps Directions error: ${response.data.status}`);
   }
+
+  const leg = response.data.routes[0].legs[0];
+
+  return {
+    distance: (leg.distance.value / 1000).toFixed(2),   // meters → km
+    duration: Math.ceil(leg.duration.value / 60),        // seconds → minutes
+    polyline: response.data.routes[0].overview_polyline.points // for map rendering
+  };
 };
 
 // Usage
-const pickup = { lng: 78.486, lat: 17.385 };
-const dropoff = { lng: 78.491, lat: 17.390 };
-const result = await calculateDistance(pickup, dropoff);
-// result = { distance: 3.52, duration: 12, route: {...} }
+const pickup  = { lat: 17.385, lng: 78.486 };
+const dropoff = { lat: 17.390, lng: 78.491 };
+const result  = await calculateDistance(pickup, dropoff);
+// result = { distance: '3.52', duration: 12, polyline: 'abc...' }
+```
+
+> **Note:** You can also use the **Google Maps Distance Matrix API** if you only need
+> distance/duration without the polyline (e.g. for partner matching or fee calculation).
+
+```javascript
+/**
+ * Lightweight distance/duration lookup via Distance Matrix API.
+ * Useful when you don't need the route polyline.
+ */
+const getDistanceMatrix = async (pickup, dropoff) => {
+  const url = 'https://maps.googleapis.com/maps/api/distancematrix/json';
+
+  const response = await axios.get(url, {
+    params: {
+      origins: `${pickup.lat},${pickup.lng}`,
+      destinations: `${dropoff.lat},${dropoff.lng}`,
+      mode: 'driving',
+      key: process.env.GOOGLE_MAPS_API_KEY
+    }
+  });
+
+  const element = response.data.rows[0].elements[0];
+
+  if (element.status !== 'OK') {
+    throw new Error(`Distance Matrix error: ${element.status}`);
+  }
+
+  return {
+    distance: (element.distance.value / 1000).toFixed(2), // km
+    duration: Math.ceil(element.duration.value / 60)      // minutes
+  };
+};
 ```
 
 ---
@@ -1002,28 +954,24 @@ const result = await calculateDistance(pickup, dropoff);
 
 ```javascript
 /**
- * Calculate delivery fee based on distance
- * @param {Number} distanceKm - Distance in kilometers
+ * Calculate delivery fee based on distance.
+ * @param {Number} distanceKm
  * @returns {Number} - Delivery fee in rupees
  */
 const calculateDeliveryFee = (distanceKm) => {
-  const BASE_FARE = 20;        // Base fare: ₹20
-  const PER_KM_RATE = 10;      // Per km rate: ₹10/km
-  const MIN_FEE = 20;          // Minimum delivery fee: ₹20
-  const MAX_FEE = 200;         // Maximum delivery fee: ₹200
-  
-  let fee = BASE_FARE + (distanceKm * PER_KM_RATE);
-  
-  // Apply min and max constraints
-  fee = Math.max(MIN_FEE, Math.min(MAX_FEE, fee));
-  
-  return Math.round(fee); // Round to nearest rupee
+  const BASE_FARE   = 20;   // ₹20 base
+  const PER_KM_RATE = 10;   // ₹10 per km
+  const MIN_FEE     = 20;   // ₹20 minimum
+  const MAX_FEE     = 200;  // ₹200 maximum
+
+  const fee = BASE_FARE + distanceKm * PER_KM_RATE;
+  return Math.round(Math.max(MIN_FEE, Math.min(MAX_FEE, fee)));
 };
 
-// Usage
-const fee1 = calculateDeliveryFee(2.5);  // ₹45 (20 + 2.5*10)
-const fee2 = calculateDeliveryFee(0.5);  // ₹20 (minimum)
-const fee3 = calculateDeliveryFee(25);   // ₹200 (maximum)
+// Examples
+calculateDeliveryFee(2.5);  // ₹45
+calculateDeliveryFee(0.5);  // ₹20  (hits minimum)
+calculateDeliveryFee(25);   // ₹200 (hits maximum)
 ```
 
 ---
@@ -1032,80 +980,50 @@ const fee3 = calculateDeliveryFee(25);   // ₹200 (maximum)
 
 ```javascript
 /**
- * Calculate partner earnings from delivery fee
- * @param {Number} deliveryFee - Total delivery fee
- * @returns {Number} - Partner earnings after platform commission
+ * Calculate partner earnings after platform commission.
+ * @param {Number} deliveryFee
+ * @returns {Number} - Partner payout in rupees
  */
 const calculatePartnerEarnings = (deliveryFee) => {
-  const PLATFORM_COMMISSION = 0.20; // 20% commission
-  
-  const earnings = deliveryFee * (1 - PLATFORM_COMMISSION);
-  
-  return Math.round(earnings);
+  const PLATFORM_COMMISSION = 0.20; // 20%
+  return Math.round(deliveryFee * (1 - PLATFORM_COMMISSION));
 };
 
-// Usage
-const deliveryFee = 50;
-const partnerEarnings = calculatePartnerEarnings(deliveryFee); // ₹40
+// Example: ₹50 fee → ₹40 partner payout
 ```
 
 ---
 
-### 5. Partner Matching Algorithm
+### 5. Partner Matching Algorithm (MongoDB Geospatial)
 
 ```javascript
 const User = require('./models/User');
 
 /**
- * Find nearest available delivery partner
+ * Find the nearest available delivery partner using MongoDB $near.
  * @param {Object} pickupLocation - { coordinates: [lng, lat] }
- * @param {Number} maxDistance - Maximum search radius in meters (default: 5000m = 5km)
- * @returns {Object} - Nearest available partner or null
+ * @param {Number} maxDistance    - Search radius in metres (default 5000)
+ * @returns {Object|null}         - Nearest partner or null
  */
 const findNearestPartner = async (pickupLocation, maxDistance = 5000) => {
-  try {
-    // Query partners using MongoDB geospatial query
-    const partners = await User.find({
-      role: 'partner',
-      'partnerDetails.isAvailable': true,
-      'partnerDetails.currentLocation': {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: pickupLocation.coordinates // [lng, lat]
-          },
-          $maxDistance: maxDistance // in meters
-        }
+  const partners = await User.find({
+    role: 'partner',
+    'partnerDetails.isAvailable': true,
+    'partnerDetails.currentLocation': {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: pickupLocation.coordinates // [lng, lat]
+        },
+        $maxDistance: maxDistance
       }
-    })
-    .limit(5)  // Get top 5 nearest partners
-    .select('name phone partnerDetails');
-    
-    if (partners.length === 0) {
-      return null; // No available partners nearby
     }
-    
-    // Return the closest partner (first in sorted results)
-    return partners[0];
-    
-  } catch (error) {
-    console.error('Partner matching error:', error);
-    throw new Error('Unable to find delivery partner');
-  }
-};
+  })
+  .limit(5)
+  .select('name phone partnerDetails');
 
-// Usage
-const pickupLocation = {
-  type: 'Point',
-  coordinates: [78.486, 17.385] // [longitude, latitude]
+  return partners.length > 0 ? partners[0] : null;
 };
-
-const partner = await findNearestPartner(pickupLocation);
-if (partner) {
-  console.log(`Found partner: ${partner.name}`);
-} else {
-  console.log('No partners available nearby');
-}
 ```
 
 ---
@@ -1114,23 +1032,17 @@ if (partner) {
 
 ```javascript
 /**
- * Calculate estimated delivery time
- * @param {Number} preparationTime - Vendor preparation time (minutes)
- * @param {Number} travelDuration - Travel time from Mapbox (minutes)
- * @returns {Number} - Total estimated time in minutes
+ * Calculate total estimated delivery time.
+ * @param {Number} preparationTime - Vendor prep time (minutes)
+ * @param {Number} travelDuration  - Travel time from Directions API (minutes)
+ * @returns {Number} - Total estimated minutes
  */
 const calculateEstimatedDeliveryTime = (preparationTime, travelDuration) => {
-  const BUFFER_TIME = 5; // Extra 5 minutes buffer
-  
-  const totalTime = preparationTime + travelDuration + BUFFER_TIME;
-  
-  return Math.ceil(totalTime);
+  const BUFFER_TIME = 5; // 5-minute buffer
+  return Math.ceil(preparationTime + travelDuration + BUFFER_TIME);
 };
 
-// Usage
-const prepTime = 15;      // Vendor needs 15 min to prepare
-const travelTime = 12;    // 12 min travel time from Mapbox
-const estimatedTime = calculateEstimatedDeliveryTime(prepTime, travelTime); // 32 minutes
+// Example: 15 min prep + 12 min travel + 5 buffer = 32 minutes
 ```
 
 ---
@@ -1139,36 +1051,26 @@ const estimatedTime = calculateEstimatedDeliveryTime(prepTime, travelTime); // 3
 
 ```javascript
 /**
- * Calculate order total
- * @param {Array} items - [{ price, quantity }]
- * @param {Number} deliveryFee - Delivery fee
+ * Calculate order total.
+ * @param {Array}  items       - [{ price, quantity }]
+ * @param {Number} deliveryFee
  * @returns {Object} - { itemsTotal, deliveryFee, totalAmount }
  */
 const calculateOrderTotal = (items, deliveryFee) => {
-  // Calculate items total
-  const itemsTotal = items.reduce((sum, item) => {
-    return sum + (item.price * item.quantity);
-  }, 0);
-  
-  // Total = items + delivery fee
-  const totalAmount = itemsTotal + deliveryFee;
-  
+  const itemsTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   return {
-    itemsTotal: Math.round(itemsTotal),
-    deliveryFee: Math.round(deliveryFee),
-    totalAmount: Math.round(totalAmount)
+    itemsTotal:   Math.round(itemsTotal),
+    deliveryFee:  Math.round(deliveryFee),
+    totalAmount:  Math.round(itemsTotal + deliveryFee)
   };
 };
 
-// Usage
+// Example
 const items = [
-  { productId: 'xxx', price: 150, quantity: 2 },  // 2 Burgers
-  { productId: 'yyy', price: 80, quantity: 1 }    // 1 Fries
+  { price: 150, quantity: 2 },  // 2 Burgers = ₹300
+  { price: 80,  quantity: 1 }   // 1 Fries   = ₹80
 ];
-const deliveryFee = 45;
-
-const total = calculateOrderTotal(items, deliveryFee);
-// total = { itemsTotal: 380, deliveryFee: 45, totalAmount: 425 }
+// itemsTotal: ₹380 | deliveryFee: ₹45 | totalAmount: ₹425
 ```
 
 ---
@@ -1179,187 +1081,273 @@ const total = calculateOrderTotal(items, deliveryFee);
 const Vendor = require('./models/Vendor');
 
 /**
- * Find nearby vendors based on user location
+ * Fetch open vendors within a given radius of the user's location.
  * @param {Object} userLocation - { coordinates: [lng, lat] }
- * @param {Number} radius - Search radius in meters (default: 5000m = 5km)
- * @returns {Array} - Array of nearby vendors
+ * @param {Number} radius       - Radius in metres (default 5000)
+ * @returns {Array}             - Array of vendor documents
  */
 const findNearbyVendors = async (userLocation, radius = 5000) => {
-  try {
-    const vendors = await Vendor.find({
-      isOpen: true, // Only show open vendors
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: userLocation.coordinates // [lng, lat]
-          },
-          $maxDistance: radius
-        }
+  return Vendor.find({
+    isOpen: true,
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: userLocation.coordinates
+        },
+        $maxDistance: radius
       }
-    })
-    .populate('userId', 'name email phone') // Get vendor user details
-    .limit(20); // Max 20 vendors
-    
-    return vendors;
-    
-  } catch (error) {
-    console.error('Error finding nearby vendors:', error);
-    throw new Error('Unable to fetch nearby vendors');
-  }
+    }
+  })
+  .populate('userId', 'name email phone')
+  .limit(20);
 };
-
-// Usage
-const userLocation = {
-  type: 'Point',
-  coordinates: [78.486, 17.385]
-};
-
-const vendors = await findNearbyVendors(userLocation, 3000); // 3km radius
 ```
+
+---
+
+### 9. Google Maps Frontend Integration
+
+> Use **`@react-google-maps/api`** on the frontend for all map rendering.
+
+```bash
+npm install @react-google-maps/api
+```
+
+#### Load the Maps Script
+
+```javascript
+// App.jsx (or index.jsx)
+import { LoadScript } from '@react-google-maps/api';
+
+const LIBRARIES = ['places']; // add 'geometry' if you need polyline decoding
+
+function App() {
+  return (
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={LIBRARIES}>
+      {/* routes / components */}
+    </LoadScript>
+  );
+}
+```
+
+#### Customer: Live Tracking Map
+
+```javascript
+import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
+
+function TrackingMap({ partnerLocation, pickupCoords, dropoffCoords, routePolyline }) {
+  const center = partnerLocation || pickupCoords;
+
+  return (
+    <GoogleMap zoom={14} center={center} mapContainerStyle={{ width: '100%', height: '400px' }}>
+      <Marker position={pickupCoords}  label="P" />  {/* Vendor/pickup */}
+      <Marker position={dropoffCoords} label="D" />  {/* Customer/dropoff */}
+      {partnerLocation && <Marker position={partnerLocation} label="🛵" />}
+      {routePolyline && (
+        <Polyline
+          path={window.google.maps.geometry.encoding.decodePath(routePolyline)}
+          options={{ strokeColor: '#4285F4', strokeWeight: 4 }}
+        />
+      )}
+    </GoogleMap>
+  );
+}
+```
+
+#### Partner: Route Display
+
+```javascript
+import { GoogleMap, DirectionsRenderer } from '@react-google-maps/api';
+import { useState, useEffect } from 'react';
+
+function RouteMap({ pickup, dropoff }) {
+  const [directions, setDirections] = useState(null);
+
+  useEffect(() => {
+    const service = new window.google.maps.DirectionsService();
+    service.route(
+      {
+        origin:      pickup,
+        destination: dropoff,
+        travelMode:  window.google.maps.TravelMode.DRIVING
+      },
+      (result, status) => {
+        if (status === 'OK') setDirections(result);
+      }
+    );
+  }, [pickup, dropoff]);
+
+  return (
+    <GoogleMap zoom={13} center={pickup} mapContainerStyle={{ width: '100%', height: '400px' }}>
+      {directions && <DirectionsRenderer directions={directions} />}
+    </GoogleMap>
+  );
+}
+```
+
+#### Geocoding (Address → Coordinates)
+
+> Useful when a customer types a delivery address manually rather than selecting a saved one.
+
+```javascript
+// Backend geocoding helper
+const geocodeAddress = async (address) => {
+  const url = 'https://maps.googleapis.com/maps/api/geocode/json';
+  const response = await axios.get(url, {
+    params: { address, key: process.env.GOOGLE_MAPS_API_KEY }
+  });
+
+  if (response.data.status !== 'OK') {
+    throw new Error(`Geocoding failed: ${response.data.status}`);
+  }
+
+  const { lat, lng } = response.data.results[0].geometry.location;
+  return { lat, lng };
+};
+```
+
+---
+
+### 10. Google Maps API Keys — Which APIs to Enable
+
+Go to **Google Cloud Console → APIs & Services → Library** and enable:
+
+| API | Used For |
+|-----|---------|
+| **Maps JavaScript API** | Frontend map rendering (`@react-google-maps/api`) |
+| **Directions API** | Driving route & polyline (backend) |
+| **Distance Matrix API** | Distance/duration for fee calc & partner matching (backend) |
+| **Geocoding API** | Convert text addresses to lat/lng (backend) |
+| **Places API** | Address autocomplete (frontend, optional) |
+
+> Use **separate API keys** for backend (server key, no HTTP referrer restriction) and frontend
+> (browser key, restrict to your domain). Never expose your backend key in the React app.
 
 ---
 
 ## Project Roadmap
 
-### Backend Foundation
-**Goal:** Setup Node.js backend with MongoDB and authentication
+### Phase 1 — Backend Foundation
+**Goal:** Set up Node.js + MongoDB + authentication
 
 - [x] Initialize Node.js project (`npm init`)
-- [ ] Install dependencies (express, mongoose, dotenv, etc.)
-- [ ] Setup Express server
-- [ ] Connect to MongoDB Atlas
-- [ ] Create Mongoose models (User, Vendor, Product, Order, Delivery, Rating, Notification, Address)
-- [ ] Setup Cloudinary for image uploads
-- [ ] Implement JWT authentication (register, login, logout)
-- [ ] Create middleware (auth, role-based access)
-- [ ] Test authentication with Postman
+- [x] Install dependencies (`express`, `mongoose`, `dotenv`, `bcrypt`, `jsonwebtoken`, etc.)
+- [x] Set up Express server
+- [x] Connect to MongoDB Atlas
+- [x] Create Mongoose models (User, Vendor, Product, Order, Delivery, Notification, Address)
+- [x] Set up Cloudinary for image uploads
+- [x] Implement JWT authentication (register, login, logout)
+- [x] Create middleware (auth guard, role-based access control)
+- [ ] Test auth endpoints with REST Client / Postman
 - [ ] Deploy backend to Render
-- [ ] Setup environment variables
+- [ ] Configure all environment variables on Render
 
-**Deliverables:**
-- Working REST API with auth endpoints
-- MongoDB connected
-- Deployed on Render
+**Deliverables:** Working REST API with auth, MongoDB connected, deployed on Render
 
 ---
 
-### Vendor & Products
-**Goal:** Vendor management and product catalog
+### Phase 2 — Vendor & Products
+**Goal:** Vendor management and product catalogue
 
-- [ ] Create vendor registration/profile APIs
-- [ ] Implement product CRUD APIs
-- [ ] Setup Multer + Cloudinary for image uploads
-- [ ] Implement geospatial queries (nearby vendors)
-- [ ] Create vendor dashboard UI (React + Tailwind)
+- [x] Vendor registration & profile APIs
+- [x] Product CRUD APIs
+- [x] Multer + Cloudinary image upload middleware
+- [x] Geospatial queries for nearby vendors (MongoDB `$near`)
+- [ ] Vendor dashboard UI (React + Tailwind)
 - [ ] Vendor login page
-- [ ] Product management page (add/edit/delete)
-- [ ] Image upload functionality
-- [ ] Test vendor workflows
+- [ ] Product management page (add / edit / delete)
+- [ ] Image upload UI
+- [ ] End-to-end vendor workflow test
 
-**Deliverables:**
-- Vendor APIs working
-- Vendor dashboard UI
-- Image uploads working
+**Deliverables:** Vendor APIs, dashboard UI, image uploads working
 
 ---
 
-### Orders & Delivery System
-**Goal:** Order creation, Mapbox integration, partner matching
+### Phase 3 — Orders & Delivery System
+**Goal:** Order creation, Google Maps integration, partner matching
 
-- [ ] Implement order creation API
-- [ ] Order ID generation system
-- [ ] Integrate Mapbox Directions API
-- [ ] Distance and route calculation
+- [ ] Order creation API
+- [ ] Order ID generation (`ORD-YYYYMMDD-XXXXX`)
+- [ ] Enable Google Maps APIs on Cloud Console (Directions, Distance Matrix, Geocoding)
+- [ ] Backend helper: `calculateDistance` using Directions API
+- [ ] Backend helper: `getDistanceMatrix` using Distance Matrix API
 - [ ] Delivery fee calculation logic
-- [ ] Partner matching algorithm (geospatial)
-- [ ] Order status workflow
-- [ ] Create partner registration API
-- [ ] Partner location update API
-- [ ] Test order flow end-to-end
+- [ ] Partner matching algorithm (MongoDB `$near`)
+- [ ] Order status state machine (`placed → accepted → preparing → ready → picked_up → in_transit → delivered`)
+- [ ] Delivery partner registration & location update API
+- [ ] End-to-end order flow test
 
-**Deliverables:**
-- Order APIs working
-- Mapbox integration complete
-- Partner matching functional
+**Deliverables:** Order APIs, Google Maps integration, partner matching functional
 
 ---
 
-### Real-time Features (Socket.io)
+### Phase 4 — Real-time Features (Socket.io)
 **Goal:** Live order tracking and notifications
 
-- [ ] Setup Socket.io server
-- [ ] Implement socket authentication
-- [ ] Create socket rooms (order, vendor, partner, admin)
-- [ ] Real-time order status updates
-- [ ] Live partner location tracking
-- [ ] Socket.io client setup in React
-- [ ] Customer order tracking UI with map
-- [ ] Partner app UI (accept orders, update status)
-- [ ] Real-time notifications
-- [ ] Test real-time features
+- [ ] Set up Socket.io server with JWT middleware
+- [ ] Implement socket rooms (order, vendor, partner, admin)
+- [ ] Real-time order status broadcasts
+- [ ] Live partner location streaming to customer
+- [ ] Socket.io client setup in React (`socket.io-client`)
+- [ ] Customer tracking page: Google Map + live partner marker + route polyline
+- [ ] Partner app UI (accept orders, update status, emit location)
+- [ ] Real-time notification system
+- [ ] End-to-end real-time test
 
-**Deliverables:**
-- Socket.io working
-- Real-time tracking UI
-- Notifications system
+**Deliverables:** Socket.io working, live tracking UI, notifications system
 
 ---
 
-### Customer App
+### Phase 5 — Customer App
 **Goal:** Complete customer-facing application
 
-- [ ] Create React app structure
-- [ ] Setup TailwindCSS
-- [ ] Implement React Router
-- [ ] Home page (browse vendors)
+- [ ] React app structure + TailwindCSS + React Router setup
+- [ ] Home page — browse nearby vendors (Google Map optional)
 - [ ] Vendor details page (menu)
-- [ ] Shopping cart functionality
+- [ ] Shopping cart (Zustand)
 - [ ] Checkout page
-- [ ] Address management
+- [ ] Address management (manual entry + Google Places autocomplete)
 - [ ] Order placement
-- [ ] Order tracking page with live map
+- [ ] Order tracking page with Google Map, live marker & polyline
 - [ ] Order history
 - [ ] User profile page
 - [ ] Responsive design
 - [ ] Deploy frontend to Vercel
 
-**Deliverables:**
-- Complete customer app
-- Deployed on Vercel
+**Deliverables:** Complete customer app, deployed on Vercel
 
 ---
 
-### Ratings & Admin Panel
+### Phase 6 — Ratings & Admin Panel
 **Goal:** Rating system and admin dashboard
 
-- [ ] Implement rating APIs
-- [ ] Rating submission UI (customer)
-- [ ] Display ratings on vendor/partner profiles
-- [ ] Create admin dashboard UI
+- [ ] Rating APIs (customer rates vendor & partner after delivery)
+- [ ] Rating submission UI
+- [ ] Display average ratings on vendor and partner profiles
+- [ ] Admin dashboard UI (key metrics cards)
 - [ ] User management (view, activate, deactivate)
-- [ ] Order monitoring page
-- [ ] Delivery monitoring with live map
-- [ ] Analytics dashboard (charts)
+- [ ] Order monitoring page with filters
+- [ ] Live delivery map (Google Maps, all active partner markers)
+- [ ] Analytics dashboard (Recharts — daily / weekly / monthly charts)
 - [ ] Platform settings page (pricing config)
-- [ ] Admin authentication
+- [ ] Admin auth (JWT, role = 'admin')
 
-**Deliverables:**
-- Rating system working
-- Admin panel complete
+**Deliverables:** Rating system, full admin panel
 
 ---
 
 ## Environment Variables
 
-### Backend (.env)
+### Backend — `.env`
+
 ```env
 # Server
 NODE_ENV=development
 PORT=6436
 
 # Database
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/hyperlocal?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/hyperlocal?retryWrites=true&w=majority
 
 # JWT
 JWT_SECRET=your_super_secret_key_minimum_32_characters_long
@@ -1367,51 +1355,50 @@ JWT_EXPIRE=7d
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-# Mapbox
-MAPBOX_TOKEN=pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6InNvbWV0b2tlbiJ9.example
+# Google Maps — SERVER key (no HTTP referrer restriction)
+# Enable: Directions API, Distance Matrix API, Geocoding API
+GOOGLE_MAPS_API_KEY=AIza...your_backend_server_key
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:3000
 
-# Pricing Configuration
+# Pricing defaults (can be overridden via Admin settings)
 BASE_FARE=20
 PER_KM_RATE=10
 PLATFORM_COMMISSION=0.20
 ```
 
-### Frontend (.env)
-```env
-# API URLs
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_SOCKET_URL=http://localhost:5000
+### Frontend — `.env`
 
-# Mapbox
-REACT_APP_MAPBOX_TOKEN=pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6InNvbWV0b2tlbiJ9.example
+```env
+# API
+REACT_APP_API_URL=http://localhost:6436/api
+REACT_APP_SOCKET_URL=http://localhost:6436
+
+# Google Maps — BROWSER key (restrict to your domain in Cloud Console)
+# Enable: Maps JavaScript API, Places API
+REACT_APP_GOOGLE_MAPS_API_KEY=AIza...your_frontend_browser_key
 ```
+
+> **Security reminder:** Never commit `.env` files to version control. Add `.env` to `.gitignore`.
+> Keep backend and frontend Google Maps API keys separate and apply appropriate restrictions in Google Cloud Console.
 
 ---
 
 ## Resources & Documentation
 
-### Official Docs
-- [Socket.io](https://socket.io/docs/)
-- [Mapbox](https://docs.mapbox.com/)
+### Google Maps Platform
+- [Google Maps JavaScript API](https://developers.google.com/maps/documentation/javascript)
+- [Directions API](https://developers.google.com/maps/documentation/directions)
+- [Distance Matrix API](https://developers.google.com/maps/documentation/distance-matrix)
+- [Geocoding API](https://developers.google.com/maps/documentation/geocoding)
+- [Places API](https://developers.google.com/maps/documentation/places/web-service)
+- [@react-google-maps/api (npm)](https://www.npmjs.com/package/@react-google-maps/api)
 
-### Tutorials
-- Real-time apps with Socket.io
-- Mapbox integration guide
-- MongoDB geospatial queries
-
----
-
-## Conclusion
-
-This documentation provides a complete structure of **Hyper Local Delivery Dispatcher**.
-
-**Next Steps:**
-1. Setup development environment
-2. Create MongoDB Atlas account
-3. Get Mapbox API key
+### Other Docs
+- [Socket.io Documentation](https://socket.io/docs/)
+- [MongoDB Geospatial Queries](https://www.mongodb.com/docs/manual/geospatial-queries/)
+- [Cloudinary Node.js SDK](https://cloudinary.com/documentation/node_integration)
