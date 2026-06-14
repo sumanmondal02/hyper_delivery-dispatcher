@@ -206,74 +206,74 @@ orderRoute.get('/history', verifyToken, verifyRole('customer'), async (req, res,
 // GET /api/vendor/orders  — Vendor sees their own orders
 // Query: ?status=placed  (optional filter)
 // ─────────────────────────────────────────────────────────────────────────────
-orderRoute.get('/vendor/orders', verifyToken, verifyRole('vendor'), async (req, res, next) => {
-  try {
-    const vendor = await VendorModel.findOne({ userId: req.user._id }).select('_id');
-    if (!vendor) return res.status(404).json({ success: false, message: 'Vendor profile not found' });
+// orderRoute.get('/vendor/orders', verifyToken, verifyRole('vendor'), async (req, res, next) => {
+//   try {
+//     const vendor = await VendorModel.findOne({ userId: req.user._id }).select('_id');
+//     if (!vendor) return res.status(404).json({ success: false, message: 'Vendor profile not found' });
 
-    const filter = { vendorId: vendor._id };
-    if (req.query.status) filter.orderStatus = req.query.status;
+//     const filter = { vendorId: vendor._id };
+//     if (req.query.status) filter.orderStatus = req.query.status;
 
-    const orders = await OrderModel.find(filter)
-      .sort({ createdAt: -1 })
-      .select('-__v')
-      .populate('customerId', 'name phone');
+//     const orders = await OrderModel.find(filter)
+//       .sort({ createdAt: -1 })
+//       .select('-__v')
+//       .populate('customerId', 'name phone');
 
-    return res.status(200).json({ success: true, count: orders.length, orders });
-  } catch (err) { next(err); }
-});
+//     return res.status(200).json({ success: true, count: orders.length, orders });
+//   } catch (err) { next(err); }
+// });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUT /api/vendor/orders/:id  — Vendor updates order status
 // Body: { status: 'accepted' | 'preparing' | 'ready' }
 // Mounted in server.js under /api/vendor so path becomes /api/vendor/orders/:id
 // ─────────────────────────────────────────────────────────────────────────────
-orderRoute.put('/vendor/:id/status', verifyToken, verifyRole('vendor'), async (req, res, next) => {
-  try {
-    const { status } = req.body;
-    const allowed    = ['accepted', 'preparing', 'ready'];
-    if (!allowed.includes(status))
-      return res.status(400).json({ success: false, message: `status must be one of: ${allowed.join(', ')}` });
+// orderRoute.put('/vendor/:id/status', verifyToken, verifyRole('vendor'), async (req, res, next) => {
+//   try {
+//     const { status } = req.body;
+//     const allowed    = ['accepted', 'preparing', 'ready'];
+//     if (!allowed.includes(status))
+//       return res.status(400).json({ success: false, message: `status must be one of: ${allowed.join(', ')}` });
 
-    const vendor = await VendorModel.findOne({ userId: req.user._id }).select('_id');
-    if (!vendor) return res.status(404).json({ success: false, message: 'Vendor profile not found' });
+//     const vendor = await VendorModel.findOne({ userId: req.user._id }).select('_id');
+//     if (!vendor) return res.status(404).json({ success: false, message: 'Vendor profile not found' });
 
-    const order = await OrderModel.findOne({ _id: req.params.id, vendorId: vendor._id });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+//     const order = await OrderModel.findOne({ _id: req.params.id, vendorId: vendor._id });
+//     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
-    // Enforce state machine: accepted → preparing → ready
-    const flow = { placed: 'accepted', accepted: 'preparing', preparing: 'ready' };
-    if (flow[order.orderStatus] !== status)
-      return res.status(400).json({ success: false, message: `Cannot move from ${order.orderStatus} to ${status}` });
+//     // Enforce state machine: accepted → preparing → ready
+//     const flow = { placed: 'accepted', accepted: 'preparing', preparing: 'ready' };
+//     if (flow[order.orderStatus] !== status)
+//       return res.status(400).json({ success: false, message: `Cannot move from ${order.orderStatus} to ${status}` });
 
-    order.orderStatus = status;
-    await order.save();
+//     order.orderStatus = status;
+//     await order.save();
 
-    const io = getIO();
-    const statusMessages = {
-      accepted:  'Your order has been accepted',
-      preparing: 'Your order is being prepared',
-      ready:     'Your order is ready for pickup',
-    };
+//     const io = getIO();
+//     const statusMessages = {
+//       accepted:  'Your order has been accepted',
+//       preparing: 'Your order is being prepared',
+//       ready:     'Your order is ready for pickup',
+//     };
 
-    io.to(`order_${order.orderId}`).emit('order_status_update', {
-      orderId: order.orderId,
-      status,
-      message: statusMessages[status],
-    });
+//     io.to(`order_${order.orderId}`).emit('order_status_update', {
+//       orderId: order.orderId,
+//       status,
+//       message: statusMessages[status],
+//     });
 
-    // When order is ready, notify all partners again in case none accepted yet
-    if (status === 'ready') {
-      const partners = await findNearestPartner(vendor.location, 5000);
-      const earnings  = calculatePartnerEarnings(order.deliveryFee);
-      if (partners.length) broadcastDeliveryRequest(io, partners[0], order, earnings);
-    }
+//     // When order is ready, notify all partners again in case none accepted yet
+//     if (status === 'ready') {
+//       const partners = await findNearestPartner(vendor.location, 5000);
+//       const earnings  = calculatePartnerEarnings(order.deliveryFee);
+//       if (partners.length) broadcastDeliveryRequest(io, partners[0], order, earnings);
+//     }
 
-    await notify(order.customerId.toString(), statusMessages[status], `Order ${order.orderId}: ${statusMessages[status]}`, 'order', { orderId: order.orderId });
+//     await notify(order.customerId.toString(), statusMessages[status], `Order ${order.orderId}: ${statusMessages[status]}`, 'order', { orderId: order.orderId });
 
-    return res.status(200).json({ success: true, order });
-  } catch (err) { next(err); }
-});
+//     return res.status(200).json({ success: true, order });
+//   } catch (err) { next(err); }
+// });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/orders/:id  — Get single order detail (customer sees own, vendor sees own)

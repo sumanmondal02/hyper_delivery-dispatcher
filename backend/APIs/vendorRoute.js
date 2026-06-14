@@ -1,8 +1,12 @@
 import express from 'express';
-import { VendorModel, ProductModel } from '../models/index.js';
+import { VendorModel, ProductModel, OrderModel } from '../models/index.js';
 import { verifyToken, verifyRole } from '../middlewares/verifyToken.js';
 import { upload } from '../config/multer.js';
 import { uploadToCloudinary } from '../config/cloudinaryUpload.js';
+import { findNearestPartner, broadcastDeliveryRequest } from '../helpers/partnerMatcher.js';
+import { calculatePartnerEarnings } from '../helpers/pricing.js';
+import { notify } from '../helpers/notify.js';
+import { getIO } from '../config/socket.js';
 
 const vendorRoute = express.Router();
 
@@ -242,6 +246,47 @@ vendorRoute.get('/nearby', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// GET /api/vendors/orders?status=placed
+vendorRoute.get('/orders', verifyToken, verifyRole('vendor'), async (req, res, next) => {
+  try {
+    const vendor = await getOwnVendor(req.user._id);
+    if (!vendor) return res.status(404).json({ success: false, message: 'Vendor profile not found' });
+    const filter = { vendorId: vendor._id };
+    if (req.query.status) filter.orderStatus = req.query.status;
+    const orders = await OrderModel.find(filter).sort({ createdAt: -1 }).select('-__v').populate('customerId', 'name phone');
+    return res.status(200).json({ success: true, count: orders.length, orders });
+  } catch (err) { next(err); }
+});
+
+// PUT /api/vendors/orders/:id/status
+vendorRoute.put('/orders/:id/status', verifyToken, verifyRole('vendor'), async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['accepted', 'preparing', 'ready'];
+    if (!allowed.includes(status))
+      return res.status(400).json({ success: false, message: `status must be one of: ${allowed.join(', ')}` });
+    const vendor = await getOwnVendor(req.user._id);
+    if (!vendor) return res.status(404).json({ success: false, message: 'Vendor profile not found' });
+    const order = await OrderModel.findOne({ _id: req.params.id, vendorId: vendor._id });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    const flow = { placed: 'accepted', accepted: 'preparing', preparing: 'ready' };
+    if (flow[order.orderStatus] !== status)
+      return res.status(400).json({ success: false, message: `Cannot move from ${order.orderStatus} to ${status}` });
+    order.orderStatus = status;
+    await order.save();
+    const io = getIO();
+    const msgs = { accepted: 'Your order has been accepted', preparing: 'Your order is being prepared', ready: 'Your order is ready for pickup' };
+    io.to(`order_${order.orderId}`).emit('order_status_update', { orderId: order.orderId, status, message: msgs[status] });
+    if (status === 'ready') {
+      const partners = await findNearestPartner(vendor.location, 5000);
+      const earnings = calculatePartnerEarnings(order.deliveryFee);
+      if (partners.length) broadcastDeliveryRequest(io, partners[0], order, earnings);
+    }
+    await notify(order.customerId.toString(), msgs[status], `Order ${order.orderId}: ${msgs[status]}`, 'order', { orderId: order.orderId });
+    return res.status(200).json({ success: true, order });
+  } catch (err) { next(err); }
 });
 
 // GET /api/vendors/:id

@@ -1319,24 +1319,6 @@ Go to **Google Cloud Console → APIs & Services → Library** and enable:
 
 ---
 
-### Phase 6 — Ratings & Admin Panel
-**Goal:** Rating system and admin dashboard
-
-- [ ] Rating APIs (customer rates vendor & partner after delivery)
-- [ ] Rating submission UI
-- [ ] Display average ratings on vendor and partner profiles
-- [ ] Admin dashboard UI (key metrics cards)
-- [ ] User management (view, activate, deactivate)
-- [ ] Order monitoring page with filters
-- [ ] Live delivery map (Google Maps, all active partner markers)
-- [ ] Analytics dashboard (Recharts — daily / weekly / monthly charts)
-- [ ] Platform settings page (pricing config)
-- [ ] Admin auth (JWT, role = 'admin')
-
-**Deliverables:** Rating system, full admin panel
-
----
-
 ## Environment Variables
 
 ### Backend — `.env`

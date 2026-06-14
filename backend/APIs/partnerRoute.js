@@ -126,13 +126,13 @@ partnerRoute.put('/orders/:id/accept', async (req, res, next) => {
     });
 
     // Update order status
-    order.orderStatus = 'picked_up'; // next state after partner accepts from ready
+    order.orderStatus = 'in_transit'; // next state after partner accepts from ready
     await order.save();
 
     const io = getIO();
     io.to(`order_${order.orderId}`).emit('order_status_update', {
       orderId: order.orderId,
-      status:  'picked_up',
+      status:  'in_transit',
       message: 'A delivery partner has been assigned and is on the way',
     });
 
