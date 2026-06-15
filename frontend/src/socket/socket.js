@@ -6,11 +6,12 @@ let socket = null;
 
 // ─── Connect with JWT ─────────────────────────────────────────────────────────
 export const connectSocket = () => {
-  const token = localStorage.getItem('token');
-  if (!token || socket?.connected) return;
+  if (socket?.connected) return;
 
+  const token = localStorage.getItem('token');
   socket = io(URL, {
     auth: { token },
+    withCredentials: true,
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: 5,
@@ -42,12 +43,12 @@ export const joinAdminRoom   = ()          => socket?.emit('join_admin_room');
 // ─── Partner: emit live location every 8s while on delivery ──────────────────
 let locationInterval = null;
 
-export const startLocationBroadcast = (partnerId, getCoords) => {
+export const startLocationBroadcast = (partnerId, orderId, getCoords) => {
   if (locationInterval) return;
   locationInterval = setInterval(async () => {
     try {
       const coords = await getCoords();
-      socket?.emit('update_location', { partnerId, location: { coordinates: coords } });
+      socket?.emit('update_location', { orderId, location: { coordinates: coords } });
     } catch (_) {}
   }, 8000);
 };

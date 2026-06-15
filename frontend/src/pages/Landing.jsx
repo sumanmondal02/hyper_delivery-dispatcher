@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { RiMotorbikeLine, RiStoreLine, RiMapPinLine, RiArrowRightLine, RiTimeLine, RiShieldLine } from 'react-icons/ri';
-import favicon from '../../public/favicon.png';
 import useAuthStore from '../store/useAuthStore';
 import * as S from '../styles/common';
 
@@ -34,7 +33,7 @@ export default function Landing() {
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-[#2e2e2e]">
         <span className={S.topBarLogo}>
-          <img src={favicon} alt="Hyper" className="w-15 h-15 mr-1.5" />
+          <img src="/favicon.png" alt="Hyper" className="w-15 h-15 mr-1.5" />
           Hyper - Dispatch. Track. Deliver.
         </span>
         <div className="flex items-center gap-3">

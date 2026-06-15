@@ -4,7 +4,7 @@ import { connectSocket, disconnectSocket } from '../socket/socket';
 
 const useAuthStore = create((set) => ({
   user:    JSON.parse(localStorage.getItem('user')) || null,
-  token:   localStorage.getItem('token') || null,
+  token: localStorage.getItem('token') || null,
   loading: false,
   error:   null,
 
@@ -13,10 +13,11 @@ const useAuthStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.post('/auth/register', data);
-      const { token, user } = res.data;
-      localStorage.setItem('token', token);
+      const { user, token } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
       set({ user, token, loading: false });
+      disconnectSocket();
       connectSocket();
       return { success: true, role: user.role };
     } catch (err) {
@@ -31,10 +32,11 @@ const useAuthStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.post('/auth/login', data);
-      const { token, user } = res.data;
-      localStorage.setItem('token', token);
+      const { user, token } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
       set({ user, token, loading: false });
+      disconnectSocket();
       connectSocket();
       return { success: true, role: user.role };
     } catch (err) {
@@ -48,8 +50,8 @@ const useAuthStore = create((set) => ({
   logout: async () => {
     try { await api.post('/auth/logout'); } catch (_) {}
     disconnectSocket();
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     set({ user: null, token: null, error: null });
   },
 

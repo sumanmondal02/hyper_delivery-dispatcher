@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { RiMotorbikeLine, RiEyeLine, RiEyeOffLine, RiMailLine, RiLockLine } from 'react-icons/ri';
-import favicon from '../../public/favicon.png';
 import useAuthStore from '../store/useAuthStore';
 import * as S from '../styles/common';
 
@@ -29,7 +28,7 @@ export default function Login() {
     <div className={S.authPage}>
       <div className={S.authBox}>
         <div className="flex items-center justify-center gap-2 mb-2">
-          <img src={favicon} alt="Hyper" className="w-11 h-11 mr-0.5" />
+          <img src="/favicon.png" alt="Hyper" className="w-11 h-11 mr-0.5" />
           <span className={S.authLogo} style={{ marginBottom: 0 }}>Hyper</span>
         </div>
         <p className={S.authTagline}>Your city, delivered fast</p>

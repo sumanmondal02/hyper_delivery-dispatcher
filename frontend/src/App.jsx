@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoadScript } from '@react-google-maps/api';
 import { useEffect } from 'react';
 import useAuthStore from './store/useAuthStore';
-import { connectSocket } from './socket/socket';
+import { connectSocket, disconnectSocket } from './socket/socket';
 
 // Auth pages
 import Landing  from './pages/Landing';
@@ -42,8 +42,8 @@ const MAPS_LIBRARIES = ['places', 'geometry'];
 
 // ─── Protected Route ──────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children, roles }) => {
-  const { user, token } = useAuthStore();
-  if (!token || !user) return <Navigate to="/login" replace />;
+  const { user } = useAuthStore();
+  if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
 };
@@ -57,11 +57,16 @@ const RoleRedirect = () => {
 };
 
 export default function App() {
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    if (token) connectSocket();
-  }, [token]);
+    if (!user) return;
+    connectSocket();
+    return () => {
+      // Cleanup on unmount or user change
+      disconnectSocket();
+    };
+  }, [user]);
 
   return (
     <LoadScript

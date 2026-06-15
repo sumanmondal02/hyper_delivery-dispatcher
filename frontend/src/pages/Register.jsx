@@ -6,7 +6,6 @@ import {
   RiMotorbikeLine, RiEyeLine, RiEyeOffLine, RiMailLine,
   RiLockLine, RiUserLine, RiPhoneLine, RiStoreLine, RiMapPinLine,
 } from 'react-icons/ri';
-import favicon from '../../public/favicon.png';
 import useAuthStore from '../store/useAuthStore';
 import * as S from '../styles/common';
 
@@ -28,22 +27,64 @@ export default function Register() {
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
-    const payload = { ...data, role };
+  try {
+    const payload = {
+      ...data,
+      role,
+    };
+
+    if (role === 'vendor') {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+          }
+        );
+      });
+
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      payload.coordinates = JSON.stringify([
+        longitude,
+        latitude,
+      ]);
+    }
+
     const res = await registerUser(payload);
+
     if (res.success) {
       toast.success('Account created!');
-      const map = { customer: '/home', vendor: '/vendor/orders', partner: '/partner/available' };
+
+      const map = {
+        customer: '/home',
+        vendor: '/vendor/orders',
+        partner: '/partner/available',
+      };
+
       navigate(map[role] || '/home');
     } else {
       toast.error(res.error);
     }
-  };
+  } catch (err) {
+    if (role === 'vendor') {
+      toast.error(
+        'Location access is required for vendor registration'
+      );
+    } else {
+      toast.error('Registration failed');
+    }
+  }
+};
 
   return (
     <div className={S.authPage}>
       <div className={`${S.authBox} max-w-[520px]`}>
         <div className="flex items-center justify-center gap-2 mb-2">
-          <img src={favicon} alt="Hyper" className="w-11 h-11 mr-0.5" />
+          <img src="/favicon.png" alt="Hyper" className="w-11 h-11 mr-0.5" />
           <span className={S.authLogo} style={{ marginBottom: 0 }}>Hyper</span>
         </div>
         <p className={S.authTagline}>Join the fastest delivery network</p>
@@ -71,7 +112,7 @@ export default function Register() {
             <label className={S.label}>Full Name</label>
             <div className={S.inputWrap}>
               <RiUserLine className={S.inputIcon} />
-              <input {...register('name', { required: 'Name is required', minLength: { value: 2, message: 'Min 2 characters' } })}
+              <input {...register('name', { required: 'Name is required', minLength: { value: 4, message: 'Min 4 characters' } })}
                 type="text" placeholder="Full Name"
                 className={errors.name ? S.inputError : S.inputWithIcon} />
             </div>
@@ -118,6 +159,89 @@ export default function Register() {
             {errors.password && <p className={S.fieldError}>{errors.password.message}</p>}
           </div>
 
+          {role === 'vendor' && (
+            <div className="border border-[#2e2e2e] rounded-xl p-4 mb-4 bg-[#2a2a2a]/50">
+              <p className="text-[12px] font-semibold text-[#888888] uppercase tracking-wide mb-3">
+                Business Details
+              </p>
+
+              <div className={S.formGroup}>
+                <label className={S.label}>Business Name</label>
+                <input
+                  {...register('businessName', {
+                    required: role === 'vendor'
+                      ? 'Business name required'
+                      : false
+                  })}
+                  type="text"
+                  placeholder="Shop Name"
+                  className={
+                    errors.businessName
+                      ? S.inputError
+                      : S.input
+                  }
+                />
+                {errors.businessName && (
+                  <p className={S.fieldError}>
+                    {errors.businessName.message}
+                  </p>
+                )}
+              </div>
+
+              <div className={S.formGroup}>
+                <label className={S.label}>Category</label>
+                <select
+                  {...register('category', {
+                    required: role === 'vendor'
+                      ? 'Select category'
+                      : false
+                  })}
+                  className={
+                    errors.category
+                      ? S.inputError
+                      : S.select
+                  }
+                >
+                  <option value="">Select Category</option>
+                  <option value="restaurant">Restaurant</option>
+                  <option value="grocery">Grocery</option>
+                  <option value="pharmacy">Pharmacy</option>
+                  <option value="bakery">Bakery</option>
+                  <option value="other">Other</option>
+                </select>
+
+                {errors.category && (
+                  <p className={S.fieldError}>
+                    {errors.category.message}
+                  </p>
+                )}
+              </div>
+
+              <div className={S.formGroup}>
+                <label className={S.label}>Address</label>
+                <input
+                  {...register('address', {
+                    required: role === 'vendor'
+                      ? 'Address required'
+                      : false
+                  })}
+                  type="text"
+                  placeholder="Shop Address"
+                  className={
+                    errors.address
+                      ? S.inputError
+                      : S.input
+                  }
+                />
+                {errors.address && (
+                  <p className={S.fieldError}>
+                    {errors.address.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Partner-only fields */}
           {role === 'partner' && (
             <div className="border border-[#2e2e2e] rounded-xl p-4 mb-4 bg-[#2a2a2a]/50">
@@ -133,12 +257,20 @@ export default function Register() {
                 {errors.vehicleType && <p className={S.fieldError}>{errors.vehicleType.message}</p>}
               </div>
 
-              <div className={S.formGroup} style={{ marginBottom: 0 }}>
+              <div className={S.formGroup}>
                 <label className={S.label}>Vehicle Number</label>
                 <input {...register('vehicleNumber', { required: role === 'partner' ? 'Vehicle number required' : false })}
                   type="text" placeholder="TN01AB1234"
                   className={errors.vehicleNumber ? S.inputError : S.input} />
                 {errors.vehicleNumber && <p className={S.fieldError}>{errors.vehicleNumber.message}</p>}
+              </div>
+
+              <div className={S.formGroup} style={{ marginBottom: 0 }}>
+                <label className={S.label}>Driving License</label>
+                <input {...register('drivingLicense', { required: role === 'partner' ? 'Driving license required' : false })}
+                  type="text" placeholder="DLXXXXXXXX"
+                  className={errors.drivingLicense ? S.inputError : S.input} />
+                {errors.drivingLicense && <p className={S.fieldError}>{errors.drivingLicense.message}</p>}
               </div>
             </div>
           )}

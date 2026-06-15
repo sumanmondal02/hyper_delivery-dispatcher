@@ -67,8 +67,8 @@ export default function Navbar() {
       <aside className={S.sidebar}>
         <div className={S.sidebarInner}>
           <div className={S.sidebarLogo}>
-            <RiMotorbikeLine className="text-[#ff6b00] text-[24px]" />
-            <span className={S.sidebarLogoText}>Hyper - Dispatch. Track. Deliver.</span>
+            <img src="/favicon.png" alt="Hyper" className="w-13 h-13 mr-0.5" />
+            <span className={S.sidebarLogoText}>Hyper Order</span>
           </div>
 
           <nav className="flex flex-col gap-1">

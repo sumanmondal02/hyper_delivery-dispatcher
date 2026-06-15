@@ -135,11 +135,12 @@ authRoute.post('/register', upload.single('profileImage'), async (req, res, next
     }
 
     // ── Sign JWT and set cookie ─────────────────────────────────────────────
-    signAndSetCookie(res, user._id);
+    const token = signAndSetCookie(res, user._id);
 
     return res.status(201).json({
       success: true,
       message: 'Registration successful',
+      token,
       user: user.toSafeObject(),
     });
   } catch (err) {
@@ -185,11 +186,12 @@ authRoute.post('/login', async (req, res, next) => {
       });
     }
 
-    signAndSetCookie(res, user._id);
+    const token = signAndSetCookie(res, user._id);
 
     return res.status(200).json({
       success: true,
       message: 'Login successful',
+      token,
       user: user.toSafeObject(),
     });
   } catch (err) {

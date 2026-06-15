@@ -87,7 +87,7 @@ const vendorSchema = new Schema(
     // Admin approval before vendor can accept orders
     isApproved: {
       type: Boolean,
-      default: false,
+      default: true,
     },
 
     totalOrders: {
