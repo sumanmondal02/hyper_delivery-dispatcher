@@ -42,7 +42,7 @@ export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, logout } = useAuthStore();
-  const { itemCount }    = useCartStore();
+  const itemCount = useCartStore((s) => s.getItemCount());
   const { unreadCount }  = useNotifStore();
 
   if (!user) return null;

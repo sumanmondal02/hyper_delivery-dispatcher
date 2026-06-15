@@ -214,4 +214,15 @@ adminRoute.put('/settings', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Add this route:
+adminRoute.put('/users/:id/toggle', async (req, res, next) => {
+  try {
+    const user = await UserModel.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    user.isActive = !user.isActive;
+    await user.save();
+    return res.json({ success: true, user });
+  } catch (err) { next(err); }
+});
+
 export default adminRoute;

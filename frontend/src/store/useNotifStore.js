@@ -11,10 +11,9 @@ const useNotifStore = create((set, get) => ({
     set({ loading: true });
     try {
       const res = await api.get('/notifications');
-      const notifications = res.data.notifications || [];
       set({
-        notifications,
-        unreadCount: notifications.filter((n) => !n.isRead).length,
+        notifications: res.data.notifications || [],
+        unreadCount: (res.data.notifications || []).filter((n) => !n.isRead).length,
         loading: false,
       });
     } catch (_) {

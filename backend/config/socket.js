@@ -43,7 +43,10 @@ export const init = (httpServer) => {
     // Customer joins order room for live tracking
     socket.on('join_order_room',   ({ orderId })   => orderId && socket.join(`order_${orderId}`));
     // Vendor joins their room to receive new orders
-    socket.on('join_vendor_room',  ()  => socket.join(`vendor_${userId}`));
+    socket.on('join_vendor_room', ({ vendorId } = {}) => {
+      const roomId = vendorId || userId;
+      socket.join(`vendor_${roomId}`);
+    });
     // Partner joins their room to receive delivery requests
     socket.on('join_partner_room', () => socket.join(`partner_${userId}`));
     socket.on('join_user_room', () => socket.join(`user_${userId}`));

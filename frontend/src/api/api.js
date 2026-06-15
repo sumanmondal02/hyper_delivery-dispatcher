@@ -8,11 +8,11 @@ const api = axios.create({
 });
 
 // ─── Request: attach JWT ──────────────────────────────────────────────────────
-// api.interceptors.request.use((config) => {
-//   const token = localStorage.getItem('token');
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
-//   return config;
-// });
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 // ─── Response: handle 401 globally ───────────────────────────────────────────
 api.interceptors.response.use(

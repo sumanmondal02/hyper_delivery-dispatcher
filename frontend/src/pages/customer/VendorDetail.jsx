@@ -99,9 +99,9 @@ export default function VendorDetail() {
               {vendor.description && <p className="text-[#888888] text-[14px] mt-1">{vendor.description}</p>}
               <div className="flex items-center gap-3 mt-2 flex-wrap">
                 <span className="capitalize text-[13px] text-[#888888]">{vendor.category}</span>
-                {vendor.location?.address && (
+                {vendor.address && (
                   <span className="flex items-center gap-1 text-[13px] text-[#888888]">
-                    <RiMapPinLine className="text-[#ff6b00]" /> {vendor.location.address}
+                    <RiMapPinLine className="text-[#ff6b00]" /> {vendor.address}
                   </span>
                 )}
                 {vendor.openingTime && (

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
-const BASE_FARE    = 20;
-const PER_KM_RATE  = 10;
-const MIN_FEE      = 20;
-const MAX_FEE      = 200;
+const BASE_FARE   = 20;
+const PER_KM_RATE = 10;
+const MIN_FEE     = 20;
+const MAX_FEE     = 200;
 
 const calcDeliveryFee = (distanceKm = 0) => {
   const fee = BASE_FARE + distanceKm * PER_KM_RATE;
@@ -11,19 +11,15 @@ const calcDeliveryFee = (distanceKm = 0) => {
 };
 
 const useCartStore = create((set, get) => ({
-  items:       [],    // [{ productId, name, price, quantity, image }]
-  vendor:      null,  // { _id, businessName, ... }
-  distanceKm:  0,
+  items:      [],
+  vendor:     null,
+  distanceKm: 0,
 
-  // ─── Add item (clears cart if different vendor) ──────────────────────────────
   addItem: (product, vendor) => {
     const { items, vendor: currentVendor } = get();
-
-    // Different vendor — clear cart first
     if (currentVendor && currentVendor._id !== vendor._id) {
       set({ items: [], vendor: null });
     }
-
     const existing = get().items.find((i) => i.productId === product._id);
     if (existing) {
       set({
@@ -60,23 +56,14 @@ const useCartStore = create((set, get) => ({
     });
   },
 
-  clearCart: () => set({ items: [], vendor: null, distanceKm: 0 }),
-
+  clearCart:   () => set({ items: [], vendor: null, distanceKm: 0 }),
   setDistance: (km) => set({ distanceKm: km }),
 
-  // ─── Computed ────────────────────────────────────────────────────────────────
-  get itemsTotal() {
-    return get().items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  },
-  get deliveryFee() {
-    return calcDeliveryFee(get().distanceKm);
-  },
-  get totalAmount() {
-    return get().itemsTotal + get().deliveryFee;
-  },
-  get itemCount() {
-    return get().items.reduce((sum, i) => sum + i.quantity, 0);
-  },
+  // Computed as regular functions (Zustand v5 compatible)
+  getItemsTotal:  () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+  getDeliveryFee: () => calcDeliveryFee(get().distanceKm),
+  getTotalAmount: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0) + calcDeliveryFee(get().distanceKm),
+  getItemCount:   () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 }));
 
 export default useCartStore;

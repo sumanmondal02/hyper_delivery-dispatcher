@@ -18,7 +18,10 @@ export const connectSocket = () => {
     reconnectionDelay: 1000,
   });
 
-  socket.on('connect', () => console.log('[socket] connected:', socket.id));
+  socket.on('connect', () => {
+    console.log('[socket] connected:', socket.id);
+    socket.emit('join_user_room');
+  });
   socket.on('disconnect', (reason) => console.log('[socket] disconnected:', reason));
   socket.on('connect_error', (err) => console.error('[socket] error:', err.message));
 

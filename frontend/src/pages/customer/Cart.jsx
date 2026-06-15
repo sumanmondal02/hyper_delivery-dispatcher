@@ -6,7 +6,10 @@ import * as S from '../../styles/common';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, vendor, updateQty, removeItem, clearCart, itemsTotal, deliveryFee, totalAmount, distanceKm } = useCartStore();
+  const { items, vendor, updateQty, removeItem, clearCart, distanceKm } = useCartStore();
+  const itemsTotal  = useCartStore((s) => s.getItemsTotal());
+  const deliveryFee = useCartStore((s) => s.getDeliveryFee());
+  const totalAmount = useCartStore((s) => s.getTotalAmount());
 
   if (items.length === 0) return (
     <div className="flex min-h-screen bg-[#0f0f0f]">
