@@ -1,4 +1,4 @@
-# 🛵 Hyper Local Delivery Dispatcher
+# Hyper Local Delivery Dispatcher
 
 A real-time delivery management platform connecting **customers**, **vendors**, and **delivery partners** for hyper-local deliveries — with live GPS tracking, distance-based pricing, and instant status updates.
 
@@ -6,7 +6,7 @@ A real-time delivery management platform connecting **customers**, **vendors**, 
 
 ---
 
-## ✨ What It Does
+## What It Does
 
 | Role | What They Can Do |
 |------|-----------------|
@@ -17,7 +17,7 @@ A real-time delivery management platform connecting **customers**, **vendors**, 
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 **Backend** — Node.js · Express.js · MongoDB · Socket.io · JWT · Cloudinary · Google Maps API
 
@@ -27,88 +27,7 @@ A real-time delivery management platform connecting **customers**, **vendors**, 
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js v18+
-- MongoDB Atlas account
-- Google Cloud project with Maps APIs enabled
-- Cloudinary account
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-username/hyper-local-delivery-dispatcher.git
-cd hyper-local-delivery-dispatcher
-```
-
-### 2. Install Dependencies
-
-```bash
-# Backend
-cd server && npm install
-
-# Frontend
-cd ../client && npm install
-```
-
-### 3. Configure Environment Variables
-
-**Backend** — create `server/.env`:
-
-```env
-NODE_ENV=development
-PORT=6436
-MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/hyperlocal
-JWT_SECRET=your_secret_key_min_32_chars
-JWT_EXPIRE=7d
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-GOOGLE_MAPS_API_KEY=AIza...your_server_key
-FRONTEND_URL=http://localhost:3000
-BASE_FARE=20
-PER_KM_RATE=10
-PLATFORM_COMMISSION=0.20
-```
-
-**Frontend** — create `client/.env`:
-
-```env
-REACT_APP_API_URL=http://localhost:6436/api
-REACT_APP_SOCKET_URL=http://localhost:6436
-REACT_APP_GOOGLE_MAPS_API_KEY=AIza...your_browser_key
-```
-
-> ⚠️ Use **separate** Google Maps API keys for backend and frontend. Restrict the browser key to your domain in Google Cloud Console.
-
-### 4. Google Maps APIs to Enable
-
-In **Google Cloud Console → APIs & Services → Library**, enable:
-
-- Maps JavaScript API *(frontend)*
-- Directions API *(backend)*
-- Distance Matrix API *(backend)*
-- Geocoding API *(backend)*
-- Places API *(frontend — for address autocomplete)*
-
-### 5. Run Locally
-
-```bash
-# Terminal 1 — Backend
-cd server && npm run dev
-
-# Terminal 2 — Frontend
-cd client && npm start
-```
-
-Backend runs on `http://localhost:6436`  
-Frontend runs on `http://localhost:3000`
-
----
-
-## 📦 Key Features
+## Key Features
 
 - **Unique Order IDs** — every order gets a human-readable ID like `ORD-20260517-A3X9K`
 - **Live GPS tracking** — delivery partner location streams to customer map every 5–10 seconds via Socket.io
@@ -119,7 +38,7 @@ Frontend runs on `http://localhost:3000`
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 hyper-local-delivery-dispatcher/
@@ -145,7 +64,7 @@ hyper-local-delivery-dispatcher/
 
 ---
 
-## 🗺️ Order Lifecycle
+## Order Lifecycle
 
 ```
 Customer places order
@@ -165,7 +84,7 @@ Customer places order
 
 ---
 
-## 💰 Pricing Logic
+## Pricing Logic
 
 | Parameter | Default | Configurable |
 |-----------|---------|--------------|
@@ -179,7 +98,7 @@ Partner earns **80%** of the delivery fee after platform commission.
 
 ---
 
-## 🌐 Deployment
+## Deployment
 
 | Service | Platform | Notes |
 |---------|----------|-------|
