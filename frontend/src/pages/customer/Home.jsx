@@ -133,7 +133,7 @@ export default function CustomerHome() {
             {CATEGORIES.map((c) => (
               <button key={c} onClick={() => setCategory(c)}
                 className={category === c ? S.chipActive : S.chip}>
-                {c === 'All' ? '🍽️' : c === 'restaurant' ? '🍔' : c === 'grocery' ? '🛒' : c === 'pharmacy' ? '💊' : c === 'bakery' ? '🥐' : '📦'}
+                {c === 'All' ? '' : c === 'restaurant' ? '' : c === 'grocery' ? '' : c === 'pharmacy' ? '' : c === 'bakery' ? '' : ''}
                 {' '}{c.charAt(0).toUpperCase() + c.slice(1)}
               </button>
             ))}
@@ -178,7 +178,9 @@ function VendorCard({ vendor, onClick }) {
       {vendor.image ? (
         <img src={vendor.image} alt={vendor.businessName} className={S.vendorCardImg} />
       ) : (
-        <div className={`${S.vendorCardImg} flex items-center justify-center text-[#555555] text-[40px]`}>🏪</div>
+        <div className={`${S.vendorCardImg} flex items-center justify-center text-[#555555] text-[40px]`}>
+          <RiStoreLine />
+        </div>
       )}
       <div className={S.vendorCardBody}>
         <div className={S.flexBetween}>

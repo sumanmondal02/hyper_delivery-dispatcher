@@ -100,6 +100,8 @@ const vendorSchema = new Schema(
     timestamps: true, // createdAt, updatedAt
     versionKey: false,
     strict: "throw", // Prevent saving fields not defined in the schema
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 

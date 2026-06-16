@@ -82,7 +82,7 @@ export default function VendorDetail() {
         <div className="relative h-[200px] md:h-[260px] bg-[#1a1a1a] overflow-hidden">
           {vendor.image
             ? <img src={vendor.image} alt={vendor.businessName} className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center text-[#2a2a2a] text-[80px]">🏪</div>
+            : <div className="w-full h-full flex items-center justify-center text-[#2a2a2a] text-[80px]"></div>
           }
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/40 to-transparent" />
           <button onClick={() => navigate(-1)}
@@ -153,7 +153,9 @@ export default function VendorDetail() {
                     <div className="flex flex-col items-center gap-2">
                       {product.image
                         ? <img src={product.image} alt={product.name} className={S.productImg} />
-                        : <div className={S.productImgEmpty}>🍽️</div>
+                        : <div className={S.productImgEmpty}>
+                           No image
+                        </div>
                       }
                       {!product.isAvailable ? (
                         <span className="text-[12px] text-[#ff3b30] font-medium">Unavailable</span>

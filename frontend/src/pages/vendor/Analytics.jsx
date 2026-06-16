@@ -6,13 +6,14 @@ import { Spinner } from '../../components/Spinner';
 import * as S from '../../styles/common';
 
 export default function VendorAnalytics() {
-  const [data, setData]     = useState(null);
+  const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/vendors/analytics');
+      // ✅ FIXED: backend route is GET /api/vendors/me/analytics
+      const res = await api.get('/vendors/me/analytics');
       setData(res.data.analytics);
     } catch {
       setData(null);
@@ -37,45 +38,37 @@ export default function VendorAnalytics() {
             <Spinner large />
           ) : !data ? (
             <div className={S.emptyState}>
-              <RiBarChartLine className={S.emptyIcon} />
+              <RiBarChartLine className="text-[48px] text-[#2a2a2a] mb-4" />
               <p className={S.emptyTitle}>No analytics yet</p>
               <p className={S.emptySubtitle}>Start receiving orders to see your stats here</p>
             </div>
           ) : (
             <>
-              {/* Summary stats */}
               <div className={`${S.statGrid} mb-6`}>
                 <div className={S.statCard}>
-                  <div className={`${S.statIcon} bg-[#ff6b00]/15 text-[#ff6b00]`}>
-                    <RiOrderPlayLine />
-                  </div>
+                  <div className={`${S.statIcon} bg-[#ff6b00]/15 text-[#ff6b00]`}><RiOrderPlayLine /></div>
                   <p className={S.statNum}>{data.totalOrders ?? 0}</p>
                   <p className={S.statLabel}>Total Orders</p>
                 </div>
                 <div className={S.statCard}>
-                  <div className={`${S.statIcon} bg-[#00c853]/15 text-[#00c853]`}>
-                    <RiMoneyRupeeCircleLine />
-                  </div>
+                  <div className={`${S.statIcon} bg-[#00c853]/15 text-[#00c853]`}><RiMoneyRupeeCircleLine /></div>
                   <p className={S.statNum}>₹{data.totalRevenue ?? 0}</p>
                   <p className={S.statLabel}>Total Revenue</p>
                 </div>
                 <div className={S.statCard}>
-                  <div className={`${S.statIcon} bg-[#2979ff]/15 text-[#2979ff]`}>
-                    <RiBarChartLine />
-                  </div>
-                  <p className={S.statNum}>₹{data.totalOrders > 0 ? Math.round((data.totalRevenue ?? 0) / data.totalOrders) : 0}</p>
+                  <div className={`${S.statIcon} bg-[#2979ff]/15 text-[#2979ff]`}><RiBarChartLine /></div>
+                  <p className={S.statNum}>
+                    ₹{data.totalOrders > 0 ? Math.round((data.totalRevenue ?? 0) / data.totalOrders) : 0}
+                  </p>
                   <p className={S.statLabel}>Avg Order Value</p>
                 </div>
                 <div className={S.statCard}>
-                  <div className={`${S.statIcon} bg-[#ffb300]/15 text-[#ffb300]`}>
-                    <RiOrderPlayLine />
-                  </div>
-                  <p className={S.statNum}>{data.completedOrders ?? 0}</p>
-                  <p className={S.statLabel}>Completed</p>
+                  <div className={`${S.statIcon} bg-[#ffb300]/15 text-[#ffb300]`}><RiOrderPlayLine /></div>
+                  <p className={S.statNum}>{data.activeOrders ?? 0}</p>
+                  <p className={S.statLabel}>Active Now</p>
                 </div>
               </div>
 
-              {/* Popular items */}
               {data.popularItems?.length > 0 && (
                 <div className={S.cardPaddedLg}>
                   <h2 className={`${S.cardTitle} mb-4`}>Top Items</h2>
@@ -91,31 +84,6 @@ export default function VendorAnalytics() {
                         <div className="text-right">
                           <p className="text-[14px] font-bold text-[#ff6b00]">×{item.totalQuantity}</p>
                           <p className="text-[12px] text-[#888888]">₹{item.totalRevenue}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent orders revenue */}
-              {data.recentOrders?.length > 0 && (
-                <div className={`${S.cardPaddedLg} mt-4`}>
-                  <h2 className={`${S.cardTitle} mb-4`}>Recent Orders</h2>
-                  <div className="space-y-2">
-                    {data.recentOrders.map((order) => (
-                      <div key={order._id} className={`${S.flexBetween} py-2 border-b border-[#2e2e2e] last:border-0`}>
-                        <div>
-                          <p className="font-mono text-[13px] font-bold text-[#ff6b00]">{order.orderId}</p>
-                          <p className="text-[12px] text-[#888888] mt-0.5">
-                            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-[15px] text-[#f0f0f0]">₹{order.totalAmount}</p>
-                          <span className={S.getStatusStyle(order.orderStatus)} style={{ fontSize: '11px', padding: '2px 8px' }}>
-                            {order.orderStatus}
-                          </span>
                         </div>
                       </div>
                     ))}

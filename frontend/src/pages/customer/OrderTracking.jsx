@@ -237,7 +237,7 @@ export default function OrderTracking() {
               <p className="text-[13px] text-[#f0f0f0]">{order.items?.length} item(s)</p>
             </div>
             <div className={S.flexBetween}>
-              <p className="text-[13px] text-[#888888]">Total paid</p>
+              <p className="text-[13px] text-[#888888]">Amount to be Paid</p>
               <p className="text-[14px] font-bold text-[#ff6b00]">₹{order.totalAmount}</p>
             </div>
           </div>

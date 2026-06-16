@@ -198,7 +198,7 @@ const orderSchema = new Schema(
 );
 
 // ─── Pre-save Hook: Auto-set deliveredAt ─────────────────────────────────────
-orderSchema.pre('save', function (next) {
+orderSchema.pre('save', function () {
   if (
     this.isModified('orderStatus') &&
     this.orderStatus === 'delivered' &&
@@ -206,13 +206,10 @@ orderSchema.pre('save', function (next) {
   ) {
     this.deliveredAt = new Date();
   }
-
   // Mark payment as paid on delivery (COD)
   if (this.isModified('orderStatus') && this.orderStatus === 'delivered') {
     this.paymentStatus = 'paid';
   }
-
-  next();
 });
 
 // ─── Static: Generate Unique Order ID ────────────────────────────────────────

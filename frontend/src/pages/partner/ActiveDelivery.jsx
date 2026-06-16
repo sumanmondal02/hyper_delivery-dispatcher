@@ -28,11 +28,13 @@ export default function ActiveDelivery() {
       setLoading(true);
       try {
         // Get history and find the active one
-        const res = await api.get('/partner/history?limit=5');
-        const deliveries = res.data.deliveries || [];
-        const active = deliveries.find((d) =>
-          ['assigned', 'picked_up', 'in_transit'].includes(d.status)
-        );
+        // const res = await api.get('/partner/history?limit=5');
+        const res = await api.get('/partner/active-delivery');
+        const active = res.data.delivery;
+        // const deliveries = res.data.deliveries || [];
+        // const active = deliveries.find((d) =>
+        //   ['assigned', 'picked_up', 'in_transit'].includes(d.status)
+        // );
         if (active) {
           setDelivery(active);
           setOrder(active.orderId); // populated in backend

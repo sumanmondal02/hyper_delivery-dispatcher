@@ -59,8 +59,6 @@ export default function Profile() {
       // Update store
       await updateProfile({});
       toast.success('Profile photo updated');
-      // Force re-fetch user
-      window.location.reload();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Upload failed');
     } finally {
@@ -96,6 +94,7 @@ export default function Profile() {
             <div className="relative">
               {user.profileImage ? (
                 <img
+                  // src={ user.profileImage ? `${user.profileImage}?v=${Date.now()}` : '' }
                   src={user.profileImage}
                   alt={user.name}
                   className="w-24 h-24 rounded-full object-cover border-2 border-[#2e2e2e]"

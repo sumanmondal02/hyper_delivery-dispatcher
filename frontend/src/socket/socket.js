@@ -12,9 +12,9 @@ export const connectSocket = () => {
   socket = io(URL, {
     auth: { token },
     withCredentials: true,
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
   });
 

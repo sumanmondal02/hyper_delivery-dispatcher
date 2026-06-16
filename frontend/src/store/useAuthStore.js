@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../api/api';
-import { connectSocket, disconnectSocket } from '../socket/socket';
+import { connectSocket, disconnectSocket, stopLocationBroadcast } from '../socket/socket';
 
 const useAuthStore = create((set) => ({
   user:    JSON.parse(localStorage.getItem('user')) || null,
@@ -49,6 +49,7 @@ const useAuthStore = create((set) => ({
   // ─── Logout ─────────────────────────────────────────────────────────────────
   logout: async () => {
     try { await api.post('/auth/logout'); } catch (_) {}
+    stopLocationBroadcast();
     disconnectSocket();
     localStorage.removeItem('user');
     localStorage.removeItem('token');
@@ -60,9 +61,17 @@ const useAuthStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.put('/auth/profile', data);
-      const user = res.data.user;
-      localStorage.setItem('user', JSON.stringify(user));
-      set({ user, loading: false });
+      const updatedUser = res.data.user;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      set({ user: {
+        ...updatedUser,
+        profileImage:
+          updatedUser.profileImage
+          ? `${updatedUser.profileImage}?v=${Date.now()}`
+          : null
+      },
+        loading: false
+      });
       return { success: true };
     } catch (err) {
       const error = err.response?.data?.message || 'Update failed';

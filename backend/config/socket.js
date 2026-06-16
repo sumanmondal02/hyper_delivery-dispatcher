@@ -63,7 +63,7 @@ export const init = (httpServer) => {
       io.to('admin_room').emit('delivery_update', { partnerId: userId, orderId, location, timestamp: new Date() });
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', async (reason) => {
       if (process.env.NODE_ENV === 'development') {
         console.log(`Socket disconnected: ${userId} — ${reason}`);
       }

@@ -10,6 +10,15 @@ const partnerRoute = express.Router();
 
 partnerRoute.use(verifyToken, verifyRole('partner'));
 
+partnerRoute.get('/profile', async (req,res,next)=>{
+   try{
+     const partner = await UserModel.findById(req.user._id).select('-password');
+     return res.status(200).json({success:true,partner});
+   }catch(err){
+     next(err);
+   }
+ });
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PUT /api/partner/availability
 // Body: { isAvailable: true | false }
@@ -35,18 +44,46 @@ partnerRoute.put('/availability', async (req, res, next) => {
 // Body: { location: { coordinates: [lng, lat] } }
 // Updates partner's stored currentLocation in DB (REST fallback — prefer socket)
 // ─────────────────────────────────────────────────────────────────────────────
-partnerRoute.put('/location', async (req, res, next) => {
-  try {
+partnerRoute.put('/location', async (req,res,next)=>{
+  try{
     const coords = req.body.location?.coordinates;
-    if (!Array.isArray(coords) || coords.length !== 2)
-      return res.status(400).json({ success: false, message: 'location.coordinates must be [longitude, latitude]' });
+    if(!Array.isArray(coords) || coords.length!==2){
+      return res.status(400).json({
+        success:false,
+        message:'location.coordinates must be [longitude, latitude]'
+      });
+    }
+    if(coords[0]===0 && coords[1]===0){
+      return res.status(400).json({
+        success:false,
+        message:'Valid GPS location required'
+      });
+    }
+    await UserModel.findByIdAndUpdate(req.user._id, { 'partnerDetails.currentLocation':{
+        type:'Point',
+        coordinates:coords
+      }
+    }
+    );
+    return res.status(200).json({ success:true, message:'Location updated' });
+  }catch(err){
+    next(err);
+  }
+});
 
-    await UserModel.findByIdAndUpdate(req.user._id, {
-      'partnerDetails.currentLocation': { type: 'Point', coordinates: coords },
-    });
-
-    return res.status(200).json({ success: true, message: 'Location updated' });
-  } catch (err) { next(err); }
+// GET /active-delivery - Get current active delivery for partner (if any) — added for easier frontend handling
+partnerRoute.get('/active-delivery', async (req,res,next)=>{
+  try{
+   const delivery =await DeliveryModel.findOne({
+      partnerId:req.user._id,
+      status:{
+        $in:['assigned','picked_up','in_transit']
+      }
+    }).populate('orderId');
+   return res.status(200).json({success:true,delivery});
+  }catch(err){
+    next(err);
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -118,12 +155,30 @@ partnerRoute.put('/orders/:id/accept', async (req, res, next) => {
 
     const earnings = calculatePartnerEarnings(order.deliveryFee);
 
-    const delivery = await DeliveryModel.create({
-      orderId:        order._id,
-      partnerId:      req.user._id,
-      status:         'assigned',
-      partnerEarnings: earnings,
-    });
+    // const delivery = await DeliveryModel.create({
+    //   orderId:        order._id,
+    //   partnerId:      req.user._id,
+    //   status:         'assigned',
+    //   partnerEarnings: earnings,
+    // });
+
+    let delivery;
+
+    try{
+      delivery = await DeliveryModel.create({
+        orderId:order._id,
+        partnerId:req.user._id,
+        status:'assigned',
+        partnerEarnings:earnings
+      });
+    }catch(err){
+      if(err.code===11000){
+        return res.status(409).json({
+          success:false,
+          message:'Order already accepted by another partner'
+        });
+      } throw err;
+    }
 
     // Update order status
     order.orderStatus = 'in_transit'; // next state after partner accepts from ready
@@ -186,17 +241,17 @@ partnerRoute.put('/orders/:id/accept', async (req, res, next) => {
 partnerRoute.put('/orders/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body;
-    const allowed = ['in_transit', 'delivered'];
+    const allowed = ['picked_up', 'in_transit', 'delivered'];
     if (!allowed.includes(status))
-      return res.status(400).json({ success: false, message: `status must be in_transit or delivered` });
+      return res.status(400).json({ success: false, message: `status must be picked_up, in_transit or delivered` });
 
     const delivery = await DeliveryModel.findOne({ orderId: req.params.id, partnerId: req.user._id });
     if (!delivery) return res.status(404).json({ success: false, message: 'Delivery not found' });
 
     // State machine: assigned → in_transit → delivered
-    const flow = { assigned: 'in_transit', in_transit: 'delivered' };
+    // const flow = { assigned: 'in_transit', in_transit: 'delivered' };
     // Accept picked_up as entry point too (set during accept)
-    const allowFrom = { in_transit: ['assigned', 'picked_up'], delivered: ['in_transit'] };
+    const allowFrom = { picked_up: ['assigned'], in_transit: ['picked_up'], delivered: ['in_transit'] };
     if (!allowFrom[status]?.includes(delivery.status))
       return res.status(400).json({ success: false, message: `Cannot move from ${delivery.status} to ${status}` });
 

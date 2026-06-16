@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { RiArrowLeftLine, RiDeleteBinLine, RiAddLine, RiSubtractLine, RiStoreLine } from 'react-icons/ri';
+import { RiArrowLeftLine, RiDeleteBinLine, RiAddLine, RiSubtractLine, RiStoreLine, RiShoppingCartLine } from 'react-icons/ri';
 import Navbar from '../../components/Navbar';
 import useCartStore from '../../store/useCartStore';
 import * as S from '../../styles/common';
@@ -20,7 +20,9 @@ export default function Cart() {
           <h1 className={S.topBarTitle}>Cart</h1>
         </div>
         <div className={S.emptyState} style={{ marginTop: '80px' }}>
-          <div className={S.emptyIcon}>🛒</div>
+          <div className={S.emptyIcon}>
+            <RiShoppingCartLine />
+          </div>
           <p className={S.emptyTitle}>Your cart is empty</p>
           <p className={S.emptySubtitle}>Browse nearby stores and add items to get started</p>
           <button onClick={() => navigate('/home')} className={`${S.btnPrimary} mt-4`}>Browse stores</button>

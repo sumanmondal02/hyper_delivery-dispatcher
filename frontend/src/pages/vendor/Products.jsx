@@ -289,7 +289,7 @@ export default function VendorProducts() {
                   {product.image ? (
                     <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl bg-[#2a2a2a] flex items-center justify-center text-[#555555] text-[24px] flex-shrink-0">🍽️</div>
+                    <div className="w-16 h-16 rounded-xl bg-[#2a2a2a] flex items-center justify-center text-[#555555] text-[24px] flex-shrink-0">No Image</div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className={S.flexBetween}>

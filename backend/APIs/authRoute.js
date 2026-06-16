@@ -201,7 +201,10 @@ authRoute.post('/login', async (req, res, next) => {
 
 // ─── POST /api/auth/logout ────────────────────────────────────────────────────
 // Protected. Clears the JWT cookie.
-authRoute.post('/logout', verifyToken, (req, res) => {
+authRoute.post('/logout', verifyToken, async (req, res) => {
+  if (req.user.role === "partner") {
+    await UserModel.findByIdAndUpdate(req.user._id, {"partnerDetails.isAvailable": false});
+  }
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

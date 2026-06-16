@@ -1,5 +1,6 @@
 import express from 'express';
 import { OrderModel, ProductModel, VendorModel, DeliveryModel, UserModel } from '../models/index.js';
+import { isVendorOpenNow } from '../helpers/vendorUtils.js';
 import { verifyToken, verifyRole } from '../middlewares/verifyToken.js';
 import { AddressModel } from '../models/index.js';
 import { getDistanceMatrix, calculateDistance } from '../helpers/maps.js';
@@ -29,7 +30,7 @@ orderRoute.post('/', verifyToken, verifyRole('customer'), async (req, res, next)
     ]);
 
     if (!vendor)          return res.status(404).json({ success: false, message: 'Vendor not found' });
-    if (!vendor.isApproved || !vendor.isOpen)
+    if (!vendor.isApproved || !isVendorOpenNow(vendor))
       return res.status(400).json({ success: false, message: 'Vendor is not accepting orders right now' });
     if (!deliveryAddress) return res.status(404).json({ success: false, message: 'Delivery address not found' });
 
@@ -53,6 +54,28 @@ orderRoute.post('/', verifyToken, verifyRole('customer'), async (req, res, next)
         subtotal:  Math.round(p.price * item.quantity),
       };
     });
+
+    if (
+      !vendor.location ||
+      !vendor.location.coordinates ||
+      vendor.location.coordinates.length !== 2
+    ) {
+      return res.status(400).json({
+        success:false,
+        message:"Vendor location is invalid"
+      });
+    }
+
+    if (
+      !deliveryAddress.location ||
+      !deliveryAddress.location.coordinates ||
+      deliveryAddress.location.coordinates.length !== 2
+    ) {
+      return res.status(400).json({
+        success:false,
+        message:"Delivery address location is invalid"
+      });
+    }
 
     // ── Distance + fee via Distance Matrix (lightweight, no polyline needed yet) ──
     const pickup  = { coordinates: vendor.location.coordinates };   // [lng, lat]
@@ -80,6 +103,7 @@ orderRoute.post('/', verifyToken, verifyRole('customer'), async (req, res, next)
     } while (await OrderModel.exists({ orderId }) && attempts < 5);
 
     // ── Create order ────────────────────────────────────────────────────────
+    console.log('Creating order...');
     const order = await OrderModel.create({
       orderId,
       customerId: req.user._id,
@@ -102,6 +126,7 @@ orderRoute.post('/', verifyToken, verifyRole('customer'), async (req, res, next)
       estimatedDeliveryTime: eta,
       specialInstructions: specialInstructions || '',
     });
+    console.log('Order created:', order._id);
 
     // ── Increment vendor total orders ────────────────────────────────────────
     await VendorModel.findByIdAndUpdate(vendor._id, { $inc: { totalOrders: 1 } });
@@ -318,7 +343,7 @@ orderRoute.put('/:id/cancel', verifyToken, verifyRole('customer'), async (req, r
 
     order.orderStatus       = 'cancelled';
     order.cancelledBy       = 'customer';
-    order.cancellationReason = req.body.reason || 'Cancelled by customer';
+    order.cancellationReason = req.body?.reason || 'Cancelled by customer';
     await order.save();
 
     // Notify vendor
@@ -333,7 +358,17 @@ orderRoute.put('/:id/cancel', verifyToken, verifyRole('customer'), async (req, r
       message: 'Order has been cancelled',
     });
 
-    await notify(order.vendorId.toString(), 'Order cancelled', `Order ${order.orderId} was cancelled by customer`, 'order', { orderId: order.orderId });
+    // await notify(order.vendorId.toString(), 'Order cancelled', `Order ${order.orderId} was cancelled by customer`, 'order', { orderId: order.orderId });
+    const vendor = await VendorModel.findById(order.vendorId).select('userId');
+    if (vendor) {
+      await notify(
+        vendor.userId.toString(),
+        'Order cancelled',
+        `Order ${order.orderId} was cancelled by customer`,
+        'order',
+        { orderId: order.orderId }
+      );
+    }
 
     return res.status(200).json({ success: true, message: 'Order cancelled', order });
   } catch (err) { next(err); }
